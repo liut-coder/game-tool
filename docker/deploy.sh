@@ -66,12 +66,12 @@ if [[ "$IMPORT_DB" == "1" ]]; then
   fi
 fi
 
-$COMPOSE up -d --build web game
+$COMPOSE up -d --build web
 
 echo "[OK] Docker 部署完成"
 echo "[OK] SDK/API: http://$PUBLIC_IP:81"
 echo "[OK] 代理后台: http://$PUBLIC_IP:82/admin"
 echo "[OK] 注册页: http://$PUBLIC_IP:82/reg"
 if [[ "${START_GAME:-0}" != "1" ]]; then
-  echo "[INFO] game 容器默认未启动游戏进程；确认后把 .env 的 START_GAME=1，再执行: $COMPOSE up -d game"
+  echo "[INFO] 默认不会启动 game 容器。需要单独调试时执行: $COMPOSE --profile game up -d --build game"
 fi

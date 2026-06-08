@@ -33,6 +33,7 @@ services:
         condition: service_healthy
 
   game:
+    profiles: ["game"]
     build: ./game
     restart: unless-stopped
     network_mode: host
