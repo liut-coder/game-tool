@@ -50,6 +50,8 @@ command -v docker >/dev/null || { echo "[ERROR] 未安装 docker" >&2; exit 1; }
 command -v curl >/dev/null || { echo "[ERROR] 未安装 curl" >&2; exit 1; }
 command -v openssl >/dev/null || { echo "[ERROR] 未安装 openssl" >&2; exit 1; }
 
+./scripts/preflight.sh
+
 ./scripts/prepare_payload.sh "$SOURCE_ROOT"
 PUBLIC_IP="$PUBLIC_IP" MYSQL_ROOT_PASSWORD="$MYSQL_ROOT_PASSWORD" REMOVE_BACKDOORS="$REMOVE_BACKDOORS" \
   python3 ./scripts/rewrite_config.py ./data/rootfs
