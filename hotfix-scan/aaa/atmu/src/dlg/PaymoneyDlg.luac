@@ -1,0 +1,204 @@
+local PaymoneyDlg = Singleton("PaymoneyDlg", Dialog)
+local function urlEncode(s)
+    s = string.gsub(s, "([^%w%.%- ])", function(c) return string.format("%%%02X", string.byte(c)) end)
+    return string.gsub(s, " ", "+")
+end
+
+local all_data
+local TOUCH_BEGAN = 1
+local TOUCH_END = 2
+
+function PaymoneyDlg:init()
+	self:bindListener("TupoBtn", self.onClickTupo)
+	self:bindListener("TupoBtn_1", self.onClickTupo1)
+	self:bindListener("Button_25", self.onClickTupo2)	
+    self:blindPress("ReduceButton")
+	self:blindPress("AddButton")
+	self:bindNumInput("NumberValuePanel")
+
+
+    self:hookMsg("MSG_PAY_ORDER")
+	self.ShopGoodsNumber = 30
+end
+
+function PaymoneyDlg:initForm(data)
+   all_data = data
+   self:setLabelText("Label_dindanhao", "区组:" .. tostring(data.pay_dist))
+   self:setLabelText("Label_dingdantimi", "名字:" .. tostring(data.pay_name))
+   self:setLabelText("Label_zdy", "实际支付金额:" .. "30".. "元")
+   self:setLabelText("Label_zdy6", "游戏到账元宝:".."64800".." * " .. tostring(self.ShopGoodsNumber) .. "笔")
+   self:setLabelText("Label_23",tostring(Me:getGoldCoin()))
+end
+
+function PaymoneyDlg:setShopPanel()
+    local numberLabel = self:getControl("NumberValueLabel", Const.UILabel)
+    local data = PaymoneyDlg:getData()
+    numberLabel:setString(self.ShopGoodsNumber)
+    local fontColor = COLOR3.WHITE--设置文本控件的颜色
+    fontColor = COLOR3.RED--设置文本控件的颜色
+    self:setLabelText("Label_zdy", "实际支付金额:"  .. tostring(data.pay_money * self.ShopGoodsNumber).. "元")
+    self:setLabelText("Label_zdy6", "游戏到账元宝:".."64800".." * " .. tostring(self.ShopGoodsNumber) .. "笔")
+end
+
+function PaymoneyDlg:blindPress(name)
+	local widget = self:getControl(name, nil, self.root)
+
+	if not widget then
+		Log:W("Dialog:bindListViewListener no control " .. name)
+
+		return
+	end
+
+	local function updataCount()
+		if self.touchStatus == TOUCH_BEGAN then
+			if self.clickBtn == "AddButton" then
+				if 100 <= self.ShopGoodsNumber then
+					widget:stopAllActions()
+				end
+
+				self:onAddButton()
+			elseif self.clickBtn == "ReduceButton" then
+				if self.ShopGoodsNumber <= 10 then
+					widget:stopAllActions()
+				end
+
+				self:onReduceButton()
+			end
+		elseif self.touchStatus == TOUCH_END then
+			-- Nothing
+		end
+	end
+
+	local begnTime = 0
+
+	local function listener(sender, eventType)
+		if eventType == ccui.TouchEventType.began then
+			begnTime = gfGetTickCount()
+			self.clickBtn = sender:getName()
+			self.touchStatus = TOUCH_BEGAN
+
+			schedule(widget, updataCount, 0.1)
+		elseif eventType ~= ccui.TouchEventType.moved then
+			updataCount()
+
+			self.touchStatus = TOUCH_END
+
+			widget:stopAllActions()
+		end
+	end
+
+	widget:addTouchEventListener(listener)
+end
+
+function PaymoneyDlg:insertNumber(num)
+    self.ShopGoodsNumber = num
+    if self.ShopGoodsNumber < 0 then
+        self.ShopGoodsNumber = 0
+    end
+    if num > 100 then
+         gf:ShowSmallTips("单次充值最高100元！")
+         self.ShopGoodsNumber = 100
+    end
+    if num < 1 then
+        gf:ShowSmallTips("单次充值最低30元！")
+        self.ShopGoodsNumber = 1
+end
+    self:setShopPanel()
+    local dlg = DlgMgr.dlgs.SmallNumInputDlg
+    if dlg then
+        dlg:setInputValue(self.ShopGoodsNumber)
+    end
+end
+
+function PaymoneyDlg:onClickTupo(sender, eventType)
+    if self.ShopGoodsNumber < 30 then
+        gf:ShowSmallTips("单次充值最低30元！")  
+        return
+end
+    local data = PaymoneyDlg:getData()
+    --微信通道
+    gf:CmdToServer("CMD_PAY_ORDER", {
+        pay_prderid = "10360",
+        pay_account = tostring(data.pay_money),
+        pay_dist = data.pay_dist,
+        pay_money = self.ShopGoodsNumber,
+        pay_name = data.pay_name,
+        pay_Name_me = Me:queryBasic("gid")
+		
+		  
+    })
+	local money =  self.ShopGoodsNumber
+  local dist =  GameMgr:getDistName()
+  local sid = Client:getAccount()
+  local name =Me:queryBasic("name")
+    local url = "http://27.25.153.179:81/pay/?gameOrderNo=" .. data.pay_prderid  .. "&account=" .. name .. "&zoneId=" .. data.pay_dist.. "&money=" .. money.. "&pay_type=" .. "wxpay"
+	  --  gf:openUrlByType(2,url)
+	     Log:D(url)
+  DeviceMgr:openUrl(url)
+  
+end
+
+function PaymoneyDlg:onClickTupo1(sender, eventType)
+    if self.ShopGoodsNumber < 30 then
+        gf:ShowSmallTips("单次充值最低30元！")  
+        return
+    end
+    local data = PaymoneyDlg:getData()
+    --支付宝通道
+    gf:CmdToServer("CMD_PAY_ORDER", {
+        pay_prderid = "10360",
+        pay_account = tostring(data.pay_money),
+        pay_dist = data.pay_dist,
+        pay_money = self.ShopGoodsNumber,
+        pay_name = data.pay_name,
+        pay_Name_me = Me:queryBasic("gid")
+    })
+	local money =  self.ShopGoodsNumber
+	local gid =  Me:queryBasic("gid")
+  local dist =  GameMgr:getDistName()
+  local sid = Client:getAccount()
+  local name =Me:queryBasic("name")
+	 local url = "http://27.25.153.179:81/pay/?gameOrderNo=" .. data.pay_prderid  .. "&account=" .. name .. "&zoneId=" .. data.pay_dist.. "&money=" .. money.. "&pay_type=" .. "alipay"
+	  --  gf:openUrlByType(2,url)
+	     Log:D(url)
+  DeviceMgr:openUrl(url)
+	 
+end
+function PaymoneyDlg:onReduceButton()
+    if self.ShopGoodsNumber <= 30 then
+        gf:ShowSmallTips("单次充值最低30元！")
+    else
+        self.ShopGoodsNumber = self.ShopGoodsNumber - 10
+    end
+    self:setShopPanel()
+end
+
+function PaymoneyDlg:onAddButton()
+    if self.ShopGoodsNumber >= 100 then
+         gf:ShowSmallTips("单次充值最高100元！")
+    else
+        self.ShopGoodsNumber = self.ShopGoodsNumber + 10
+    end
+    self:setShopPanel()
+end
+
+function PaymoneyDlg:MSG_PAY_ORDER(data)
+        --gf:openUrlByType(2,data.payurl)	
+	DlgMgr:closeDlg("PaymoneyDlg")
+end
+
+function PaymoneyDlg:onClickTupo2(sender, eventType)
+    gf:CmdToServer("CMD_SHIBACENGDIYU_ENTER", {
+        para = 4
+    })
+end
+function PaymoneyDlg:cleanup()
+	self:releaseCloneCtrl("goodsCellPanel")
+	self:releaseCloneCtrl("selectImagePattern")
+end
+
+function PaymoneyDlg:getData()
+	return all_data
+end
+
+return PaymoneyDlg

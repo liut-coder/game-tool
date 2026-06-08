@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+
+# Local runtime state and logs
+data/
+*.log
+
+# Generated APK/signing artifacts. APKs exceed GitHub normal file limit and signing keys must stay local.
+output/
+apk-work/
+*.apk
+*.idsig
+*.jks
+*.keystore
+
+# Local editor/OS files
+.DS_Store
+.idea/
+.vscode/

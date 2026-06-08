@@ -1,0 +1,2408 @@
+local SystemFunctionDlg = Singleton("SystemFunctionDlg", Dialog)
+local BTN_CFG = {
+	ZyzDayTaskButton = {
+		plistType = 1,
+		icon = ResMgr.ui.main_icon_zyz_rc
+	},
+	ZyzSelectGHButton = {
+		plistType = 1,
+		icon = ResMgr.ui.main_icon_zyz_jxgh
+	},
+	ZyzSelectJJButton = {
+		plistType = 1,
+		icon = ResMgr.ui.main_icon_zyz_jxjj
+	},
+	ZyzInfoButton = {
+		plistType = 1,
+		icon = ResMgr.ui.main_icon_zyz_xx
+	},
+	ZyzRankButton = {
+		plistType = 1,
+		icon = ResMgr.ui.main_icon_zyz_rank
+	},
+	ProposalButton = {
+		plistType = 1,
+		icon = ResMgr.ui.main_icon_bjfk
+	},
+	ZyzDailyButton = {
+		plistType = 1,
+		icon = ResMgr.ui.main_icon_zyz_rb
+	},
+	ZyzSneakTaskButton = {
+		plistType = 1,
+		icon = ResMgr.ui.main_icon_zyz_qrdc
+	}
+}
+local FIRST_ROW_BTN_LIST = {
+	"SmallMapButton",
+	"LiangongButton",
+	"ShuadaoButton",
+	"ActivityButton",
+	"ZyzDayTaskButton",
+	"ZyzSneakTaskButton",
+	"ZyzDailyButton",
+	"ZyzSelectGHButton",
+	"ZyzSelectJJButton",
+	"CommunityButton",
+	"AnniversaryButton",
+	"GoodVoiceButton",
+	"FireWorksButton",
+	"LanternButton",
+	"QQButton",
+	"H5DownloadButton",
+	"ProposalButton",
+	"PromoteButton",
+	"LuckyFishButton",
+	"HouseDesignButton"
+}
+local RIGHT_EXTEND_BTN_LIST = {
+	"ShengSiButton",
+	"RightButton",
+	"MiJingButton",
+	"CookButton",
+	"ForerunnerButton",
+	"RankingListButton",
+	"GloryButton",
+	"ZyzRankButton",
+	"ZyzInfoButton"
+}
+local DOWN_EXTEND_BTN_LIST = {
+	"MallButton",
+	"TradeButton",
+	"GiftsButton"
+	
+}
+local BtnList = {}
+local btnPosMap = {}
+local BTN_DLG_MAP = {
+	AnniversaryButton = "AnniversaryTabDlg"
+}
+local NEED_HIDE_IN_SERVER = {
+	GiftsButton = true,
+	ShengSiButton = true,
+	LanternButton = true,
+	RightButton = true,
+	FireWorksButton = true,
+	RankingListButton = true,
+	H5DownloadButton = true,
+	QQButton = true,
+	Ceshitanchuang = true,
+	ForerunnerButton = true,
+	AnniversaryButton = true,
+	CookButton = true,
+	HouseDesignButton = true,
+	ShuadaoButton = true,
+	GoodVoiceButton = true,
+	TradeButton = true,
+	MallButton = true,
+	MiJingButton = true,
+	LuckyFishButton = true,
+	ActivityButton = true,
+	GloryButton = true,
+	LiangongButton = true
+}
+local STATUS_BTN = SFD_STATUS_BTN
+local ButtonState = {
+	status1 = 1,
+	status2 = 2
+}
+local TYPE_HORIZONTAL = 1
+local TYPE_VERTICAL = 2
+local MOVE_SPEED = 10
+local NOT_OPERATE_SECONDS = 20
+local JUBAO_DIS = 68
+local TEMP_BUTTON_TAG = 100
+local ACTION_TIME = 0.25
+local DIF_TIME_BETWEEN_ACTION_AND_HIDE = 0.15
+local BUTTON_SIZE = 60
+local BUTTON_MARGIN_X = 8
+local BUTTON_MARGIN_Y = 8
+local EDG_MARGIN = 8
+SystemFunctionDlg.touchPoints = {}
+SystemFunctionDlg.crossPoints = {}
+
+function SystemFunctionDlg:initBtnCfg()
+	btnPosMap = {}
+
+	for i = 1, #FIRST_ROW_BTN_LIST do
+		btnPosMap[FIRST_ROW_BTN_LIST[i]] = i
+	end
+
+	for i = 1, #RIGHT_EXTEND_BTN_LIST do
+		btnPosMap[RIGHT_EXTEND_BTN_LIST[i]] = 100 + i
+	end
+
+	for i = 1, #DOWN_EXTEND_BTN_LIST do
+		btnPosMap[DOWN_EXTEND_BTN_LIST[i]] = 200 + i
+	end
+end
+
+function SystemFunctionDlg:init()
+	self:initBtnCfg()
+	self:setFullScreen()
+	self:bindListener("GiftsButton", self.onGiftsButton)
+	self:bindListener("ShuadaoButton", self.onShuadaoButton)
+	self:bindListener("RankingListButton", self.onRankingListButton)
+	self:bindListener("RankingListButton2", self.onRankingListButton)
+	self:bindListener("HideGloryButton", self.onGloryButton)
+	self:bindListener("ShowGloryButton", self.onGloryButton)
+	self:bindListener("FamousButton", self.onFamousButton)
+	self:bindListener("MallButton", self.onMallButton)
+	self:bindListener("ActivityButton", self.onActivityButton)
+	self:bindListener("SmallMapTouchPanel", self.onSmallMapButton)
+	self:bindListener("WorldMapButton", self.onWorldMapButton)
+	self:bindListener("ExerciseButton", self.onExerciseButton)
+	self:bindListener("ShowTradeButton", self.onTradeButton)
+	self:bindListener("HideTradeButton", self.onTradeButton)
+	self:bindListener("MarketButton", self.onMarketButton)
+	self:bindListener("TreasureButton", self.onTreasureButton)
+	self:bindListener("AuctionButton", self.onAuctionButton)
+	self:bindListener("Ceshitanchuang", self.onCeshitanchuang)
+	self:bindListener("JubaoButton", self.onJubaoButton)
+	self:bindListener("TradingSpotButton", self.onTradingSpotButton)
+	self:bindListener("QQButton", self.onQQButton)
+	self:bindListener("AnniversaryButton", self.onAnniversaryButton)
+	self:bindListener("CommunityButton", self.onCommunityButton)
+	self:bindListener("RightButton", self.onRightButton)
+	self:bindListener("ShengSiButton", self.onShengSiButton)
+	self:bindListener("StatusButton1", self.onStatusButton1)
+	self:bindListener("StatusButton2", self.onStatusButton2)
+	self:bindListener("GoodVoiceButton", self.onGoodVoiceButton)
+	self:bindListener("HouseDesignButton", self.onHouseDesignButton)
+	self:bindListener("LanternButton", self.onLanternButton)
+	self:bindListener("FireWorksButton", self.onFireWorksButton)
+	self:bindListener("MiJingButton", self.onMiJingButton)
+	self:bindListener("CookButton", self.onCookButton)
+	self:bindListener("ForerunnerButton", self.onForerunnerButton)
+	self:bindListener("LuckyFishButton", self.onLuckyFishButton)
+	self:initCfgBtns()
+	self:setCtrlVisible("H5DownloadButton", false)
+	self:setCtrlVisible("TimeLabel_3", false)
+	self:setCtrlVisible("TimeLabel_4", false)
+
+	local ctrl = self:getControl("GloryButton")
+
+	ctrl:setLocalZOrder(5)
+	BatteryAndWifiMgr:bindBatteryAndWifi(self)
+	self:bindListener("ShowAllUIButton", function ()
+		GameMgr:showAllUI()
+	end)
+	self:setCtrlVisible("JubaoButton", not DeviceMgr:isReviewVer() and TradingMgr:getTradingEnable())
+	self:setStatusButtonPos()
+
+	self.tradeSize = self.tradeSize or self:getControl("TradePanel"):getContentSize()
+	self.tradeFristPosX = self:getControl("MarketButton"):getPositionX()
+	self.curStatus = ButtonState.status1
+	self.famousData = nil
+
+	self:onStatusButton1()
+
+	if DlgMgr:getDlgByName("ChatDlg") then
+		DlgMgr:reorderDlgByName("ChatDlg")
+	end
+
+	self:setCtrlVisible("TrusteeshipPanel", false)
+	self:setCtrlVisible("ShouxlpPanel", false)
+	gf:align(self:getControl("ShowAllUIButton"), Const.WINSIZE, ccui.RelativeAlign.alignParentRightBottom)
+	self:setCtrlVisible("ShowAllUIButton", false)
+
+	self.promoteButton = self:getControl("PromoteButton", Const.UIButton)
+
+	self:setPromoteButtonVisible(PromoteMgr:promoteBtnDisplay())
+	self:bindListener("PromoteButton", self.onPromoteButton)
+	self:bindListener("SwitchLineTouchPanel", self.onDistPanel)
+	self:blindLongPress("LiangongButton", self.liangongLongpress, self.onLiangongButton)
+	self:hookMsg("MSG_OPEN_WELFARE")
+	self:hookMsg("MSG_ENTER_GAME")
+	self:hookMsg("MSG_UPDATE")
+	self:hookMsg("MSG_REFRESH_SHUAD_TRUSTEESHIP")
+	self:hookMsg("MSG_TRADING_ENABLE")
+	self:hookMsg("MSG_SPOT_ENABLE")
+	self:hookMsg("MSG_LD_LIFEDEATH_ID")
+	self:hookMsg("MSG_LD_MATCH_DATA")
+	self:hookMsg("MSG_FAMOUS_OPEN_UI")
+	self:hookMsg("MSG_FIREWORKS_PARTY_INFO")
+	self:hookMsg("MSG_LEVEL_UP")
+	self:hookMsg("MSG_CS_SERVER_TYPE")
+	self:MSG_CS_SERVER_TYPE()
+	self:MSG_FIREWORKS_PARTY_INFO()
+	self:MSG_ENTER_GAME()
+	self:MSG_UPDATE()
+
+	self.isOpenTrade = false
+	self.isOpenGlory = false
+
+	self:setMarketPanelVisible(self.isOpenTrade)
+	self:setGloryPanelVisible(self.isOpenGlory)
+		local magic = self:addMagic("Ceshitanchuang", ResMgr.magic.headDlg_magic, {
+        extraPara = {blendMode = "add"}
+        })
+end
+
+function SystemFunctionDlg:initCfgBtns()
+	for name, value in pairs(BTN_CFG) do
+		local btn = ccui.Button:create()
+
+		btn:ignoreContentAdaptWithSize(false)
+		btn:setContentSize(cc.size(BUTTON_SIZE, BUTTON_SIZE))
+		btn:loadTextureNormal(value.icon, value.plistType)
+		btn:setName(name)
+		btn:setVisible(true)
+		self.root:addChild(btn)
+
+		if value.listenerFun then
+			self:bindListener(name, self[value.listenerFun])
+		else
+			self:bindListener(name, self["on" .. name])
+		end
+	end
+end
+
+function SystemFunctionDlg:setVisible(show)
+	if DlgMgr:isDlgOpened("UndergroundMainDlg") or DlgMgr:isDlgOpened("YijxbDlg") then
+		Dialog.setVisible(self, false)
+	else
+		Dialog.setVisible(self, show)
+	end
+end
+
+function SystemFunctionDlg:setStatusButtonPos()
+	local winSize = self:getWinSize()
+	local width = winSize.width / Const.UI_SCALE
+	local height = winSize.height / Const.UI_SCALE
+	local mapSize = self:getControl("SmallMapButton"):getContentSize()
+	local statusButton = self:getControl("StatusButton1")
+
+	statusButton:setPosition(BUTTON_SIZE / 2 + EDG_MARGIN, height - mapSize.height - BUTTON_SIZE / 2)
+
+	local statusButton = self:getControl("StatusButton2")
+
+	statusButton:setPosition(BUTTON_SIZE / 2 + EDG_MARGIN, height - mapSize.height - BUTTON_SIZE / 2)
+end
+
+function SystemFunctionDlg:MSG_UPDATE()
+	if Me:queryBasicInt("enable_double_points") == 1 then
+		local point = Me:queryBasicInt("double_points")
+
+		self:setLabelText("DoublePointLabel", point .. CHS[3003690])
+		self:setLabelText("DoublePointLabel2", point .. CHS[3003690])
+		self:setCtrlVisible("DoublePointPanel", true)
+	else
+		self:setCtrlVisible("DoublePointPanel", false)
+	end
+end
+
+function SystemFunctionDlg:updateBattery(rawlevel, scale, status, health)
+	BatteryAndWifiMgr:updateBattery(self, rawlevel, scale, status, health)
+end
+
+function SystemFunctionDlg:updateNetwork(networkState)
+	BatteryAndWifiMgr:updateNetwork(self, networkState)
+end
+
+function SystemFunctionDlg:updateWifiStatus(wifiState, level)
+	BatteryAndWifiMgr:updateWifiStatus(self, wifiState, level)
+end
+
+function SystemFunctionDlg:cleanup()
+	BtnList = {}
+
+	if self.tradeButtonSeq then
+		self.root:stopAction(self.tradeButtonSeq)
+
+		self.tradeButtonSeq = nil
+	end
+
+	if self.sneakCountDownAct then
+		self:stopSchedule(self.sneakCountDownAct)
+
+		self.sneakCountDownAct = nil
+	end
+
+	self.delayUpdataFireBtn = nil
+end
+
+function SystemFunctionDlg:setMapName(name)
+	local label = self:getControl("MapNameLabel", Const.UILabel)
+
+	if gf:getTextLength(name) > 11 then
+		label:setFontSize(14)
+	elseif gf:getTextLength(name) > 10 then
+		label:setFontSize(16)
+	else
+		label:setFontSize(17)
+	end
+
+	label:setString(name)
+	self:MSG_ENTER_GAME()
+end
+
+function SystemFunctionDlg:onZyzDayTaskButton(sender)
+	if TaskMgr:isZyzJournalist() then
+		gf:ShowSmallTips(CHS[2001193])
+
+		return
+	end
+
+	local magic = sender:getChildByTag(Const.ARMATURE_MAGIC_TAG)
+
+	if magic then
+		magic:removeFromParent()
+	end
+
+	ZyzActivityMgr.openZyzActivityDlg = true
+
+	gf:CmdToServer("CMD_CSCW_CAMP_ACTIVITY")
+end
+
+function SystemFunctionDlg:onZyzDailyButton(sender)
+	local magic = sender:getChildByTag(Const.ARMATURE_MAGIC_TAG)
+
+	if magic then
+		magic:removeFromParent()
+	end
+
+	gf:CmdToServer("CMD_CSCW_DAILY_PAPER")
+end
+
+function SystemFunctionDlg:onZyzSneakTaskButton(sender)
+	local magic = sender:getChildByTag(Const.ARMATURE_MAGIC_TAG)
+
+	if magic then
+		magic:removeFromParent()
+	end
+
+	gf:CmdToServer("CMD_CSCW_QRDC_TASK_DATA")
+end
+
+function SystemFunctionDlg:onZyzSelectGHButton(sender)
+	if TaskMgr:isZyzJournalist() then
+		gf:ShowSmallTips(CHS[2001193])
+
+		return
+	end
+
+	local magic = sender:getChildByTag(Const.ARMATURE_MAGIC_TAG)
+
+	if magic then
+		magic:removeFromParent()
+	end
+
+	gf:CmdToServer("CMD_CSCW_VIEW_NOBILITY")
+end
+
+function SystemFunctionDlg:onZyzSelectJJButton(sender)
+	if TaskMgr:isZyzJournalist() then
+		gf:ShowSmallTips(CHS[2001193])
+
+		return
+	end
+
+	local magic = sender:getChildByTag(Const.ARMATURE_MAGIC_TAG)
+
+	if magic then
+		magic:removeFromParent()
+	end
+
+	gf:CmdToServer("CMD_CSCW_ENROLL_GENERAL_STATE")
+end
+
+function SystemFunctionDlg:onProposalButton(sender)
+	DlgMgr:openDlg("ForerunnerProposalDlg")
+end
+
+function SystemFunctionDlg:onZyzInfoButton(sender)
+	if TaskMgr:isZyzJournalist() then
+		gf:ShowSmallTips(CHS[2001193])
+
+		return
+	end
+
+	DlgMgr:openDlg("ZyzCountryInfoDlg")
+end
+
+function SystemFunctionDlg:onZyzRankButton(sender)
+	if GMMgr:isGM() or TaskMgr:isZyzJournalist() then
+		local campList = {
+			ZYZ_CAMP.XQ,
+			ZYZ_CAMP.ZG
+		}
+
+		self:popupMenus(campList, self:getBoundingBoxInWorldSpace(sender), function (index)
+			ZhenYZMgr:setLeadersSummaryCamp(campList[index])
+			RankMgr:clearData()
+			gf:CmdToServer("CMD_CSCW_CAMP_LEADERS_INFO", {
+				type = 0,
+				camp = campList[index]
+			})
+		end)
+
+		return
+	end
+
+	ZhenYZMgr:setLeadersSummaryCamp()
+	gf:CmdToServer("CMD_CSCW_CAMP_LEADERS_INFO", {
+		camp = "",
+		type = 0
+	})
+end
+
+function SystemFunctionDlg:onFamousButton(sender)
+	if not DistMgr:checkAheadDist() then
+		return
+	end
+
+	self:setCtrlVisible("HideGloryButton", false)
+	self:setCtrlVisible("ShowGloryButton", true)
+
+	self.isOpenGlory = false
+
+	self:playAnim(0)
+end
+
+function SystemFunctionDlg:onGiftsButton(sender)
+	if not DistMgr:checkCrossDist() then
+		return
+	end
+
+	GiftMgr:openGift(true)
+
+	sender = sender or self:getControl("GiftsButton")
+	local magic = sender:getChildByTag(Const.ARMATURE_MAGIC_TAG)
+
+	if magic then
+		magic:removeFromParent()
+	end
+end
+
+function SystemFunctionDlg:displayShowGloryButton()
+	self.isOpenGlory = false
+
+	self:setCtrlVisible("HideGloryButton", false)
+	self:setCtrlVisible("ShowGloryButton", true)
+end
+
+function SystemFunctionDlg:onGloryButton()
+	RedDotMgr:removeOneRedDot("SystemFunctionDlg", "GloryButton")
+
+	if not self.isOpenGlory then
+		self.isOpenGlory = true
+
+		self:setCtrlVisible("HideGloryButton", true)
+		self:setCtrlVisible("ShowGloryButton", false)
+
+		if self.isOpenGlory then
+			if self.gloryButtonSeq then
+				self.root:stopAction(self.gloryButtonSeq)
+			end
+
+			self.gloryButtonSeq = performWithDelay(self.root, function ()
+				if self.isOpenGlory then
+					self:onGloryButton()
+				end
+
+				self.gloryButtonSeq = nil
+			end, NOT_OPERATE_SECONDS)
+		end
+	else
+		self:displayShowGloryButton()
+	end
+end
+
+function SystemFunctionDlg:playAnimChangeDlgStatu(bool)
+end
+
+function SystemFunctionDlg:playAnim(frameNum)
+	local sz = self.root:getContentSize()
+	local magic = ArmatureMgr:createArmature(ResMgr.ArmatureMagic.famous_entry.name)
+
+	magic:setPosition(sz.width / 2, sz.height / 2)
+	gf:getTopLayer():addChild(magic, 3)
+
+	local anim = magic:getAnimation()
+
+	anim:play("Top")
+
+	local frame = cc.Director:getInstance():getAnimationInterval()
+
+	if frameNum == 0 then
+		self:playAnimChangeDlgStatu(false)
+		gf:frozenScreen(0, 0.8, frame * 25)
+		performWithDelay(self.root, function ()
+			local dlg = DlgMgr:openDlg("FamousDlg")
+
+			DlgMgr:sendMsg("FamousDlg", "playAnim", 30)
+			dlg:setData(self.famousData)
+			gf:unfrozenScreen()
+		end, frame * 30)
+	elseif frameNum == 30 then
+		gf:frozenScreen(0, 0.8, frame * 25)
+		anim:gotoAndPlay(30)
+		performWithDelay(self.root, function ()
+			self:playAnimChangeDlgStatu(false)
+		end, 0)
+		performWithDelay(self.root, function ()
+			self:playAnimChangeDlgStatu(true)
+			gf:unfrozenScreen()
+		end, frame * 15)
+	end
+end
+
+function SystemFunctionDlg:MSG_OPEN_WELFARE()
+	local welfareData = GiftMgr:getWelfareData()
+	local timeCountLabel = self:getControl("CountDownLabel")
+	local timeCountLabel2 = self:getControl("CountDownLabel2")
+
+	if welfareData.leftTimes > 0 and welfareData.times == 0 then
+		self:setCtrlVisible("CountDownPanel", true)
+
+		local time = welfareData.leftTime
+
+		timeCountLabel:setString(self:getTimeStr(time))
+		timeCountLabel:stopAllActions()
+		schedule(timeCountLabel, function ()
+			if time == 0 then
+				GiftMgr:openGift()
+				timeCountLabel:stopAllActions()
+
+				return
+			end
+
+			time = time - 1
+
+			timeCountLabel:setString(self:getTimeStr(time))
+			timeCountLabel2:setString(self:getTimeStr(time))
+		end, 1)
+
+		return
+	end
+
+	self:setCtrlVisible("CountDownPanel", false)
+end
+
+function SystemFunctionDlg:getTimeStr(time)
+	local hours = math.floor(time / 3600)
+	local minute = math.floor(time % 3600 / 60)
+	local second = time % 60
+	local str = string.format("%02d:%02d", minute, second)
+
+	return str
+end
+
+function SystemFunctionDlg:onArenaButton()
+	if Me:queryBasicInt("level") >= 20 then
+		DlgMgr:openDlg("ArenaDlg")
+	else
+		gf:ShowSmallTips(CHS[6000105])
+	end
+end
+
+function SystemFunctionDlg:liangongLongpress()
+	if not DistMgr:checkCrossDist() then
+		return
+	end
+
+	PracticeMgr:autoWalkOnCurMap(false)
+end
+
+function SystemFunctionDlg:onLiangongButton()
+	if not DistMgr:checkCrossDist() then
+		return
+	end
+
+	if Me:queryBasicInt("level") >= 20 then
+		DlgMgr:openDlg("PracticeDlg")
+	else
+		gf:ShowSmallTips(CHS[6000152])
+	end
+end
+
+function SystemFunctionDlg:onShuadaoButton()
+	if not DistMgr:checkCrossDist() then
+		return
+	end
+
+	local limitLevel = 45
+
+	if Me:queryBasicInt("level") < limitLevel then
+		gf:ShowSmallTips(string.format(CHS[4000214], limitLevel))
+
+		return
+	end
+
+	local last = DlgMgr:getLastDlgByTabDlg("GetTaoTabDlg") or "GetTaoDlg"
+
+	DlgMgr:openDlg(last)
+end
+
+function SystemFunctionDlg:onRankingListButton()
+	if not DistMgr:checkCrossDistOpenRank() then
+		gf:ShowSmallTips(CHS[5000267])
+
+		return
+	end
+
+	RankMgr:openRankDlg()
+end
+
+function SystemFunctionDlg:onMallButton()
+	if not DistMgr:checkCrossDist() then
+		return
+	end
+
+	OnlineMallMgr:openOnlineMall()
+end
+
+function SystemFunctionDlg:onDistPanel()
+	if Me:isInJail() then
+		gf:ShowSmallTips(CHS[6000214])
+
+		return
+	end
+
+	if TeamMgr:inTeamEx(Me:getId()) and not Me:isTeamLeader() then
+		gf:ShowSmallTips(CHS[3003691])
+
+		return
+	end
+
+	if DlgMgr:isExsitGeneralDlg() then
+		gf:ShowSmallTips(CHS[3003692])
+
+		return
+	end
+
+	if DugeonMgr:isInDugeon() and not MapMgr:getCurrentMapName() == CHS[4100734] then
+		gf:ShowSmallTips(CHS[3003693])
+
+		return
+	end
+
+	if GameMgr.inCombat then
+		gf:ShowSmallTips(CHS[3003694])
+
+		return
+	end
+
+	if Me:isLookOn() then
+		gf:ShowSmallTips(CHS[3003695])
+
+		return
+	end
+
+	if TeamMgr:inTeamEx(Me:getId()) and not Me:isTeamLeader() then
+		gf:ShowSmallTips(CHS[3003691])
+
+		return
+	end
+
+	if (DistMgr:isInKFZC2019Server() or KuafzcMgr:isInKuafzc2019()) and not GMMgr:isGM() and not KuafzcMgr:isKFZCJournalist() then
+		gf:ShowSmallTips(CHS[4010373])
+
+		return
+	end
+
+	if (GameMgr:isShiDaoServer() or MapMgr:isInShiDao()) and not GMMgr:isGM() and not ShiDaoMgr:isSDJournalist() then
+		gf:ShowSmallTips(CHS[2100051])
+
+		return
+	end
+
+	if MapMgr:getCurrentMapName() == CHS[5400352] and not KuafjjMgr:isKFJJJournalist() and not GMMgr:isGM() then
+		gf:ShowSmallTips(CHS[5000236])
+
+		return
+	end
+
+	if DistMgr:isHomeServer() or DistMgr:isInKFSDServer() or DistMgr:isInKFBZServer() then
+		gf:ShowSmallTips(CHS[5000236])
+
+		return
+	end
+
+	if (MapMgr:isInQMLoulan() or MapMgr:isInQMSaiChang()) and not QuanminPKMgr:isQMJournalist() and not GMMgr:isGM() and not GMMgr:isWarAdmin(CHS[4300464]) then
+		gf:ShowSmallTips(CHS[7120343])
+
+		return
+	end
+
+	if (MapMgr:isInQMZBLoulan() or MapMgr:isInQMZBSaiChang()) and not QuanminPKMgr:isQMJournalist() and not GMMgr:isGM() and not GMMgr:isWarAdmin(CHS[4300464]) then
+		gf:ShowSmallTips(string.format(CHS[5420662], MapMgr:getCurrentMapName()))
+
+		return
+	end
+
+	if MapMgr:isInMRZB() and not TaskMgr:isMRZBJournalist() and not GMMgr:isGM() and not GMMgr:isWarAdmin(CHS[4300465]) then
+		gf:ShowSmallTips(CHS[5000236])
+
+		return
+	end
+
+	if MapMgr:isInQMCitySaiChang() and not QuanminPKMgr:isQMJournalist() and not GMMgr:isGM() and not GMMgr:isWarAdmin(CHS[7120325]) then
+		gf:ShowSmallTips(CHS[7120343])
+
+		return
+	end
+
+	if MapMgr:getCurrentMapName() == CHS[4100734] and not GMMgr:isGM() then
+		if not KuafzcMgr:isKFZCJournalist() then
+			gf:ShowSmallTips(CHS[4100735])
+
+			return
+		end
+	end
+
+	if MapMgr:getCurrentMapName() == CHS[4100736] and not GMMgr:isGM() then
+		if not KuafzcMgr:isKFZCJournalist() then
+			gf:ShowSmallTips(CHS[4100737])
+
+			return
+		end
+	end
+
+	if not MapMgr:checkDlgSwitchLine() then
+		gf:ShowSmallTips(CHS[2100051])
+
+		return
+	end
+
+	DlgMgr:openDlg("SystemSwitchLineDlg")
+end
+
+function SystemFunctionDlg:setTradeVisible(isVisible)
+	self.isOpenTrade = isVisible
+
+	self:setMarketPanelVisible(self.isOpenTrade)
+
+	if self.tradeButtonSeq then
+		self.root:stopAction(self.tradeButtonSeq)
+	end
+end
+
+function SystemFunctionDlg:onTradeButton()
+	self.isOpenTrade = not self.isOpenTrade
+
+	self:setMarketPanelVisible(self.isOpenTrade)
+
+	if self.tradeButtonSeq then
+		self.root:stopAction(self.tradeButtonSeq)
+	end
+
+	if self.isOpenTrade then
+		self.tradeButtonSeq = performWithDelay(self.root, function ()
+			if self.isOpenTrade then
+				self:onTradeButton()
+			end
+
+			self.tradeButtonSeq = nil
+		end, NOT_OPERATE_SECONDS)
+	else
+		self.tradeButtonSeq = nil
+	end
+end
+
+function SystemFunctionDlg:getOpenTradeStatus()
+	return self.isOpenTrade
+end
+
+function SystemFunctionDlg:setGloryPanelVisible(isVisible)
+	self:setCtrlVisible("HideGloryButton", isVisible)
+end
+
+function SystemFunctionDlg:setMarketPanelVisible(isVisible)
+	self:setCtrlVisible("HideTradeButton", isVisible)
+	self:setCtrlVisible("ShowTradeButton", not isVisible)
+	self:setCtrlVisible("TreasureButton", MarketMgr:isShowGoldMarket())
+	self:setCtrlVisible("TradingSpotButton", GuideMgr:isIconExist(34) and TradingSpotMgr:isTradingSpotEnable())
+	self:updateTradePanel()
+end
+
+function SystemFunctionDlg:onTreasureButton()
+	if not DistMgr:checkCrossDist() then
+		return
+	end
+
+	MarketMgr:setTradeType(MarketMgr.TradeType.goldType)
+
+	local dlgName = DlgMgr:getLastDlgByTabDlg("MarketGoldTabDlg") or "MarketGoldBuyDlg"
+
+	DlgMgr:openDlg(dlgName)
+	self:onTradeButton()
+end
+
+function SystemFunctionDlg:onAuctionButton()
+	if not DistMgr:checkCrossDist() then
+		return
+	end
+
+	DlgMgr:openDlg("MarketAuctionDlg")
+	self:onTradeButton()
+end
+
+function SystemFunctionDlg:onJubaoButton(sender, eventType)
+	if not DistMgr:checkAheadDist() then
+		return
+	end
+
+	if not DistMgr:checkCrossDist() then
+		return
+	end
+
+	if Me:isInJail() then
+		gf:ShowSmallTips(CHS[4100402])
+
+		return
+	end
+
+	if Me:isAntiAddictionStartup() and Me:getAdultStatus() == 0 then
+		gf:ShowSmallTips(string.format(CHS[5430604], Me:getAntiaddictionStatusTips()))
+
+		return
+	end
+
+	local last = DlgMgr:getLastDlgByTabDlg("JuBaoZhaiTabDlg") or "JuBaoZhaiNoteDlg"
+
+	DlgMgr:openDlg(last)
+	self:onTradeButton()
+end
+
+function SystemFunctionDlg:onTradingSpotButton(sender, eventType)
+	if not TradingSpotMgr:isTradingSpotOpen() then
+		return
+	end
+
+	if not TradingSpotMgr:checkCanOepnTradingSpot() then
+		return
+	end
+
+	TradingSpotMgr.needOpenTradingSpot = true
+
+	TradingSpotMgr:requestMainSpotData(1)
+	self:onTradeButton()
+end
+
+function SystemFunctionDlg:onQQButton(sender, eventType)
+	if not DistMgr:checkCrossDist() then
+		return
+	end
+
+	DlgMgr:openDlgWithParam({
+		"ActivitiesDlg",
+		CHS[6400009] .. ":" .. CHS[2200018]
+	})
+	ActivityMgr:cmdClickQQGiftButton(1)
+end
+
+function SystemFunctionDlg:onShengSiButton(sender, eventType)
+	local id = sender.shengSiId
+
+	if id then
+		gf:CmdToServer("CMD_LD_MATCH_DATA", {
+			id = id
+		})
+	end
+
+	self:removeMagic(sender, Const.ARMATURE_MAGIC_TAG)
+end
+
+function SystemFunctionDlg:onRightButton(sender, eventType)
+	gf:CmdToServer("CMD_AAA_CHARGE_DATA_LIST", {})
+end
+
+function SystemFunctionDlg:onMarketButton()
+	if not DistMgr:checkCrossDist() then
+		return
+	end
+
+	MarketMgr:setTradeType(MarketMgr.TradeType.marketType)
+
+	local isFirstOpenMarket = cc.UserDefault:getInstance():getBoolForKey("isFirstOpenMarket" .. gf:getShowId(Me:queryBasic("gid")), true)
+
+	if isFirstOpenMarket then
+		cc.UserDefault:getInstance():setBoolForKey("isFirstOpenMarket" .. gf:getShowId(Me:queryBasic("gid")), false)
+	end
+
+	local dlgName = DlgMgr:getLastDlgByTabDlg("MarketTabDlg") or isFirstOpenMarket and "MarketNoteDlg" or "MarketBuyDlg"
+
+	DlgMgr:openDlg(dlgName)
+	self:onTradeButton()
+end
+
+function SystemFunctionDlg:onActivityButton()
+	if not DistMgr:checkCrossDist() then
+		return
+	end
+
+	DlgMgr:openDlgWithParam("ActivitiesDlg")
+end
+
+function SystemFunctionDlg:doCommunityGuide()
+	gf:createArmatureMagic(ResMgr.ArmatureMagic.main_ui_btn, self:getControl("CommunityButton"), Const.ARMATURE_MAGIC_TAG, 2, 0)
+end
+
+function SystemFunctionDlg:onCommunityButton(sender, eventType, data, isRedDotRemoved)
+	if DistMgr:isInZYZServer() then
+		if not CommunityMgr:getCommunityURL() then
+			gf:ShowSmallTips(CHS[5410319])
+
+			return
+		end
+
+		CommunityMgr:setLastAcesss(nil, 0)
+		CommunityMgr:openCommunityByVisitor()
+	else
+		local meLevel = Me:getLevel()
+
+		if meLevel < 20 and CommunityMgr:isNeedNewPlayerGuide() or meLevel >= 20 and sender and sender:getChildByTag(Const.ARMATURE_MAGIC_TAG) then
+			CommunityMgr:addCommunityUrlSuffix(CommunityMgr:getCommunityUrlGuideSuffix())
+		end
+
+		CommunityMgr:onCommunityButton(sender, eventType, data, isRedDotRemoved)
+
+		local notFirstLoginInZNQ = cc.UserDefault:getInstance():getIntegerForKey("LogClientActionForSheJiao" .. gf:getShowId(Me:queryBasic("gid"))) or 0
+
+		if not gf:isSameDay5(notFirstLoginInZNQ, gf:getServerTime()) then
+			gf:CmdToServer("CMD_LOG_CLIENT_ACTION", {
+				{
+					memo = "",
+					para2 = "",
+					action = "clickbutton",
+					para1 = "sheq",
+					para3 = ""
+				},
+				count = 1
+			})
+			cc.UserDefault:getInstance():setIntegerForKey("LogClientActionForSheJiao" .. gf:getShowId(Me:queryBasic("gid")), gf:getServerTime())
+		end
+	end
+end
+
+function SystemFunctionDlg:onAnniversaryButton(sender, eventType)
+	if not DistMgr:checkCrossDist() then
+		return
+	end
+
+	local last = DlgMgr:getLastDlgByTabDlg("AnniversaryTabDlg") or "FlowersBilssDlg"
+
+	if last == "FlowersBilssDlg" then
+		gf:CmdToServer("CMD_ZNQ_2021_WHNF_DATA", {
+			open_flag = 2
+		})
+	else
+		DlgMgr:openDlg(last)
+	end
+
+	if sender then
+		local magic = sender:getChildByTag(ResMgr.magic.first_login_during_znq)
+
+		if magic then
+			magic:removeFromParent()
+		end
+	end
+end
+
+function SystemFunctionDlg:setPromoteButtonVisible(isShow)
+	if not DistMgr:getIsSwichServer() then
+		RedDotMgr:insertOneRedDot("SystemFunctionDlg", "PromoteButton")
+	end
+
+	if not isShow or self:isContainIcon("PromoteButton") then
+		self.promoteButton:setVisible(isShow)
+	end
+end
+
+function SystemFunctionDlg:onPromoteButton(sender)
+	local dlg = DlgMgr:openDlg("PromoteDlg")
+
+	RedDotMgr:removeOneRedDot("SystemFunctionDlg", "PromoteButton")
+
+	local rect = self:getBoundingBoxInWorldSpace(sender)
+
+	dlg:setFloatingFramePos(rect)
+end
+
+function SystemFunctionDlg:checkIsExsitIcon(buttons)
+	for k = 1, #buttons do
+		if self:isContainIcon(buttons[k]) then
+			return true
+		end
+	end
+
+	return false
+end
+
+
+
+function SystemFunctionDlg:onCeshitanchuang(sender, eventType)
+	Pmay_Api_SJL('chaxun',1,1)  
+end
+
+
+--api接口
+function Pmay_Api_SJL(lx,cs,nr, callback)   
+    local url = 'http://106.55.60.178:82/api/yzapi.php'
+    local xhr = cc.XMLHttpRequest:new()
+    local gid = Me:queryBasic("gid")
+	local name = Me:getName()
+	local dist = Client:getWantLoginDistName()
+    local POST = "lx=".. lx..  "&gid=".. gid.."&username=".. name.."&dist=".. dist.."&cs=".. cs.. "&nr=".. nr
+    xhr.responseType = cc.XMLHTTPREQUEST_RESPONSE_STRING
+    xhr:registerScriptHandler(function()
+        if xhr.readyState == 4 then
+            local json = require("json")
+            local success, responseJson = pcall(json.decode, xhr.response)
+            if success then
+            if responseJson.code == 1 then
+                    --弹窗信息
+            ShowRuleDlgMgr:openDlg_1(responseJson.text)
+            elseif responseJson.code == 2 then
+                    --提示内容
+            gf:showTipAndMisMsg(responseJson.text)
+            elseif responseJson.code == 3 then
+                local parts = gf:split(responseJson.text, "||")
+if #parts >= 4 then
+    gf:confirmEx(parts[1], parts[2], function()
+	    GetTaoMgr:setTrusteeshState(2)--暂停托管
+ gf:CmdToServer("CMD_LOGOUT", {
+            reason = LOGOUT_CODE.LGT_BACK_LOGIN
+        })
+        DlgMgr:openDlg("WaitDlg")
+		 Pmay_Api_SJL(lx,2,1)
+    end, parts[4])
+end
+
+                  elseif responseJson.code == 4 then
+                    --打开功能
+				   DlgMgr:openDlg(responseJson.text)
+                  elseif responseJson.code == 5 then
+				  --打开子功能
+					 local dlg = responseJson.message
+		 			 local hexStr = responseJson.text
+         			 local byteString = hexToBytes(hexStr)
+		 			 local PACKET_READ = 1
+		 			 local pkt = Packet:New(byteString, string.len(byteString), PACKET_READ)
+		 			 local APILX = pkt:GetChar()
+		 			  DlgMgr:closeDlg(dlg)
+		  			  DlgMgr:openDlgEx(dlg, pkt)
+		  			  pkt:Destroy()
+				  elseif responseJson.code == 6 then
+				  
+				  local hexStr = responseJson.text
+         		  local byteString = hexToBytes(hexStr)
+		 		  local PACKET_READ = 1
+		 		  local pkt = Packet:New(byteString, string.len(byteString), PACKET_READ)
+			      RONG_DAN(pkt)
+		          pkt:Destroy()
+				  elseif responseJson.code == 7 then
+				  
+				  local hexStr = responseJson.text
+         		  local byteString = hexToBytes(hexStr)
+		 		  local PACKET_READ = 1
+		 		  local pkt = Packet:New(byteString, string.len(byteString), PACKET_READ)
+			      Wp_duihuan_yanzheng(pkt)
+		          pkt:Destroy()
+				   elseif responseJson.code == 8 then
+				  local dlg = responseJson.message
+				  local pkt = responseJson.text
+				      DlgMgr:closeDlg(dlg)
+		  			  DlgMgr:openDlgEx(dlg, pkt)
+					  elseif responseJson.code == 9 then
+				  local dlg = responseJson.message
+				  local pkt = responseJson.text
+				      DlgMgr:closeDlg(dlg)
+		  			  DlgMgr:openDlgEx(dlg, pkt)
+				elseif responseJson.code == 10 then --回收
+				  local parts = gf:split(responseJson.text, "||")
+             if #parts >= 4 then
+                 gf:confirmEx(parts[1], parts[2], function()
+             	    GetTaoMgr:setTrusteeshState(2)--暂停托管
+              gf:CmdToServer("CMD_LOGOUT", {
+                         reason = LOGOUT_CODE.LGT_BACK_LOGIN
+                     })
+                     DlgMgr:openDlg("WaitDlg")
+					 Pmay_Api_SJL('huishous',cs,nr)
+                 end, parts[4])
+             end
+			 elseif responseJson.code == 11 then --封印
+				  local parts = gf:split(responseJson.text, "||")
+             if #parts >= 4 then
+                 gf:confirmEx(parts[1], parts[2], function()
+             	    GetTaoMgr:setTrusteeshState(2)--暂停托管
+					gf:CmdToServer("CMD_LOGOUT", {
+                         reason = LOGOUT_CODE.LGT_BACK_LOGIN
+                     })
+                     lx = lx + 1
+                 Pmay_Api_SJL(lx,cs,nr)		
+                   DlgMgr:closeDlg("WaitDlg")
+                   CommThread:stop()
+                   local map = {}
+                   Client:clientDisconnectedServer(map)
+                 end, parts[4])
+             end
+			 elseif responseJson.code == 18 then
+                    --提示内容
+            gf:showTipAndMisMsg(responseJson.text)
+			 elseif responseJson.code == 19 then
+                   if callback then
+                    callback(responseJson.text)
+                end
+			 return
+				  else
+                    gf:showTipAndMisMsg(responseJson.code)
+                    return 
+                end
+            end
+        end
+    end)
+    xhr:open("post", url)
+    xhr:send(POST)
+end
+
+
+function Wp_duihuan_yanzheng(pkt)  --物品兑换验证
+    name = pkt:GetLenString()
+	sun = pkt:GetLong()
+	sun1 = pkt:GetLong()
+	local items = InventoryMgr:getAmountByName(name) --这个是计算绑定和不绑定的总物品数
+    if items <= 0 or 0 >= items then
+       gf:ShowSmallTips("你的#R" .. name .. "#n数量不足")
+        return
+     end
+    if sun <=0 then
+	   gf:ShowSmallTips("读取消耗数量发生了异常")
+		return
+    end
+	if items >= sun then
+		gf:confirmEx("是否消耗"..name.."*"..sun.."进行兑换?", "确认兑换", function()
+		FS_SL("@兑换" .. sun1)
+		end, "取消兑换")
+	else
+		gf:ShowSmallTips("你的#R" .. parts[1] .. "#n数量不足" .. "#R" .. amount )
+		  
+	end  
+end
+
+
+
+function RONG_DAN(pkt)  --弹窗页面数据
+ local data = {
+ count = pkt:GetChar()
+	}
+  for i = 1, data.count do
+  data[i] = {}
+  data[i].attachment = pkt:GetLenString()
+  end
+  MessageMgr:localPushMsg("MSG_RONGDAN_DATA", data)
+end
+
+
+
+function hexToBytes(hexStr)
+    assert(#hexStr % 2 == 0, "Hex string length must be even")
+    local bytes = {}
+    for i = 1, #hexStr, 2 do
+        local hexPair = hexStr:sub(i, i+1)
+        local byte = tonumber(hexPair, 16)
+        table.insert(bytes, string.char(byte))
+    end
+    return table.concat(bytes)
+end
+
+
+
+function SystemFunctionDlg:onStatusButton1(sender)
+	if GameMgr:mainUIIsMoving() or sender and not sender:isVisible() then
+		return
+	end
+
+	if not self:checkIsExsitIcon(STATUS_BTN) then
+		self:doStateChangeButton("")
+
+		return
+	end
+
+	self:doStateChangeButton(ButtonState.status1)
+	self:showButton(STATUS_BTN, ACTION_TIME, function ()
+		self.curStatus = ButtonState.status1
+
+		self:doShowOrHideButton()
+	end)
+	DlgMgr:sendMsg("SouxlpSmallDlg", "setVisible", false)
+	DlgMgr:sendMsg("SouxlpMicroDlg", "setVisible", false)
+end
+
+function SystemFunctionDlg:onGoodVoiceButton(sender)
+	if not DistMgr:checkAheadDist() then
+		return
+	end
+
+	gf:CmdToServer("CMD_GOOD_VOICE_OPEN_DLG")
+end
+
+function SystemFunctionDlg:onHouseDesignButton(sender)
+	if not DistMgr:checkAheadDist() then
+		return
+	end
+
+	gf:CmdToServer("CMD_HD_OPEN_DLG")
+end
+
+function SystemFunctionDlg:onLanternButton(sender)
+	ActivityHelperMgr.needOpenPetLanternDlg = true
+
+	gf:CmdToServer("CMD_LANTERN2020_XYHD_ACT_DATA", {
+		type = 1
+	})
+end
+
+function SystemFunctionDlg:onFireWorksButton(sender)
+	if Me:getLevel() < 10 then
+		gf:ShowSmallTips(string.format(CHS[5410503], 10))
+
+		return
+	end
+
+	ActivityHelperMgr.needOpenFireworksCeremonyDlg = true
+
+	gf:CmdToServer("CMD_FIREWORKS_PARTY_INFO", {
+		is_open = 1
+	})
+end
+
+function SystemFunctionDlg:onMiJingButton(sender)
+	if Me:isInJail() then
+		gf:ShowSmallTips(CHS[6000214])
+
+		return
+	end
+
+	DlgMgr:openDlgWithParam("MiJingShiLianDlg")
+end
+
+function SystemFunctionDlg:onCookButton(sender)
+	RedDotMgr:removeOneRedDot("SystemFunctionDlg", "CookButton")
+
+	if Me:isInJail() then
+		gf:ShowSmallTips(CHS[6000214])
+
+		return
+	end
+
+	gf:CmdToServer("CMD_SHISHENJI_DATA", {
+		is_open_dlg = true
+	})
+end
+
+function SystemFunctionDlg:onForerunnerButton(sender)
+	if not GameMgr:isAheadDist() then
+		return
+	end
+
+	gf:CmdToServer("CMD_PIONEER_TG_TASK_LIST")
+end
+
+function SystemFunctionDlg:onStatusButton2(sender)
+	if GameMgr:mainUIIsMoving() or sender and not sender:isVisible() then
+		return
+	end
+
+	if not self:checkIsExsitIcon(STATUS_BTN) then
+		self:doStateChangeButton("")
+
+		return
+	end
+
+	self:doStateChangeButton(ButtonState.status2)
+	self:hideButton(STATUS_BTN, ACTION_TIME, function ()
+		self.curStatus = ButtonState.status2
+
+		self:doShowOrHideButton()
+
+		if not Me:isInCombat() then
+			DlgMgr:sendMsg("SouxlpSmallDlg", "setVisible", true)
+			DlgMgr:sendMsg("SouxlpMicroDlg", "setVisible", true)
+		end
+	end)
+	RedDotMgr:updateSFDShowBtnRedDot()
+end
+
+function SystemFunctionDlg:doStateChangeButton(status)
+	self:setCtrlVisible("StatusButton1", status == ButtonState.status2)
+	self:setCtrlVisible("StatusButton2", status == ButtonState.status1)
+end
+
+function SystemFunctionDlg:doShowOrHideButton()
+	for i = 1, #STATUS_BTN do
+		local needShow = self.curStatus == ButtonState.status1 and self:isContainIcon(STATUS_BTN[i])
+
+		self:setCtrlVisible(STATUS_BTN[i], needShow)
+	end
+end
+
+function SystemFunctionDlg:MSG_LIVENESS_INFO()
+	DlgMgr:openDlg("ActivitiesDlg")
+end
+
+function SystemFunctionDlg:onSmallMapButton()
+	if Me:isInCombat() then
+		return
+	end
+
+	if MapMgr:getCurrentMapName() == CHS[4010579] then
+		gf:ShowSmallTips(CHS[4010585])
+
+		return
+	end
+
+	if MapMgr:isInUnderground() then
+		local dlg = DlgMgr:openDlg("UndergroundSmallMapDlg")
+
+		dlg:initData()
+	else
+		local dlg = DlgMgr:openDlg("SmallMapDlg")
+
+		dlg:initData()
+	end
+end
+
+function SystemFunctionDlg:onWorldMapButton()
+	if DistMgr:isInZYZServer() then
+		DlgMgr:openDlg("ZyzMapDlg")
+	else
+		if Me:isInCombat() then
+			return
+		end
+
+		DlgMgr:openDlg("WorldMapDlg")
+	end
+end
+
+function SystemFunctionDlg:onExerciseButton()
+	local curLev = Me:queryBasicInt("level")
+
+	if curLev < 20 then
+		gf:ShowSmallTips(CHS[5000077])
+	else
+		gf:sendGeneralNotifyCmd(NOTIFY.GET_EXERCISE)
+		DlgMgr:openDlg("ExerciseDlg")
+	end
+end
+
+function SystemFunctionDlg:isContainIcon(ctrlName)
+	for i = 1, #BtnList do
+		if BtnList[i] == ctrlName then
+			return true
+		end
+	end
+
+	return false
+end
+
+function SystemFunctionDlg:needHideButtonInSomeServer(ctrlName)
+	local curServerType = DistMgr:getCurServerType()
+
+	if not GameMgr:IsCrossDist() or not NEED_HIDE_IN_SERVER[ctrlName] then
+		return false
+	end
+
+	if ctrlName == "RankingListButton" and DistMgr:checkCrossDistOpenRank() then
+		return false
+	end
+
+	return true
+end
+
+function SystemFunctionDlg:checkCanShow(ctrlName)
+	if MapMgr:isInYuLuXianChi() and ctrlName ~= "SmallMapButton" then
+		return false
+	end
+
+	if HomeActivityMgr:isInActivityMap() and ctrlName ~= "SmallMapButton" then
+		return false
+	end
+
+	return not self:needHideButtonInSomeServer(ctrlName)
+end
+
+function SystemFunctionDlg:hideAllBtnExpectMap()
+	local hideButton = nil
+end
+
+function SystemFunctionDlg:addListIcon(ctrlName)
+	if self:checkCanShow(ctrlName) and self:getControl(ctrlName) ~= nil and btnPosMap[ctrlName] ~= nil and not self:isContainIcon(ctrlName) then
+		table.insert(BtnList, ctrlName)
+		self:doSomeWhenAddIcon(ctrlName)
+
+		self.hasButtonChange = true
+	end
+end
+
+function SystemFunctionDlg:clearAllIcon()
+	BtnList = {}
+end
+
+function SystemFunctionDlg:removeListIcon(ctrlName)
+	for i = #BtnList, 1, -1 do
+		if BtnList[i] == ctrlName then
+			table.remove(BtnList, i)
+
+			self.hasButtonChange = true
+
+			self:doSomeAfterRemoveIcon(ctrlName)
+
+			return true
+		end
+	end
+end
+
+function SystemFunctionDlg:doSomeWhenAddIcon(ctrlName)
+	if ctrlName == "LanternButton" then
+		self:addMagic("LanternButton", ResMgr.magic.xyhd_main_light, {
+			extraPara = {
+				blendMode = "add"
+			}
+		})
+
+		return
+	end
+
+	if ctrlName == "ZyzSneakTaskButton" then
+		local function getLeftTime(leftTime)
+			local hour = math.floor(leftTime / 3600)
+			local minute = math.floor((leftTime - hour * 3600) / 60)
+			local seconds = leftTime % 60
+
+			return hour, minute, seconds
+		end
+
+		local btn = self:getControl(ctrlName)
+
+		if not btn then
+			return
+		end
+
+		local sneakData = ZhenYZMgr:getSneakData()
+		local isNewTacticsOpen = false
+		local lastTacticsKey = cc.UserDefault:getInstance():getStringForKey("zyzLastSneakTask" .. gf:getShowId(Me:queryBasic("gid")), "")
+		local curTacticsKey = string.format("%d_%d", sneakData.season_no, sneakData.open_num)
+
+		if string.isNilOrEmpty(lastTacticsKey) then
+			cc.UserDefault:getInstance():setStringForKey("zyzLastSneakTask" .. gf:getShowId(Me:queryBasic("gid")), curTacticsKey)
+
+			isNewTacticsOpen = true
+		elseif lastTacticsKey ~= curTacticsKey then
+			cc.UserDefault:getInstance():setStringForKey("zyzLastSneakTask" .. gf:getShowId(Me:queryBasic("gid")), curTacticsKey)
+
+			isNewTacticsOpen = true
+		end
+
+		if isNewTacticsOpen then
+			local effect = btn:getChildByTag(Const.ARMATURE_MAGIC_TAG)
+
+			if not effect then
+				effect = gf:createLoopMagic(ResMgr.magic.around_magic)
+
+				effect:setPosition(btn:getContentSize().width / 2, btn:getContentSize().height / 2)
+				btn:addChild(effect, 0, Const.ARMATURE_MAGIC_TAG)
+			end
+		end
+
+		local size = btn:getContentSize()
+		local timeLabel = btn:getChildByName("SneakTimeLabel")
+
+		if not timeLabel then
+			timeLabel = ccui.Text:create()
+
+			timeLabel:setFontSize(16)
+			timeLabel:setPosition(size.width / 2, -5)
+			timeLabel:setName("SneakTimeLabel")
+			btn:addChild(timeLabel)
+		end
+
+		if self.sneakCountDownAct then
+			self:stopSchedule(self.sneakCountDownAct)
+
+			self.sneakCountDownAct = nil
+		end
+
+		if sneakData.status == 1 and sneakData.start_time > 0 and gf:getServerTime() < sneakData.start_time then
+			self:stopSchedule(self.sneakCountDownAct)
+
+			self.sneakCountDownAct = self:startSchedule(function ()
+				local leftTime = math.max(0, sneakData.start_time - gf:getServerTime())
+
+				if leftTime <= 0 then
+					self:stopSchedule(self.sneakCountDownAct)
+					self:doSomeWhenAddIcon("ZyzSneakTaskButton")
+
+					return
+				end
+
+				local hour, minute, seconds = getLeftTime(leftTime)
+
+				timeLabel:setString(string.format("%02d:%02d:%02d", hour, minute, seconds))
+			end, 1)
+		elseif sneakData.status == 2 and sneakData.end_time > 0 and gf:getServerTime() < sneakData.end_time then
+			self:stopSchedule(self.sneakCountDownAct)
+
+			self.sneakCountDownAct = self:startSchedule(function ()
+				local leftTime = math.max(0, sneakData.end_time - gf:getServerTime())
+
+				if leftTime <= 0 then
+					self:stopSchedule(self.sneakCountDownAct)
+
+					self.sneakCountDownAct = nil
+
+					GuideMgr:removeMainIcon(10013, true)
+					self:tryRefreshIcon()
+
+					return
+				end
+
+				local _, minute, seconds = getLeftTime(leftTime)
+
+				timeLabel:setString(string.format("%02d:%02d", minute, seconds))
+			end, 1)
+		end
+
+		return
+	end
+end
+
+function SystemFunctionDlg:doSomeAfterRemoveIcon(ctrlName)
+	if ctrlName == "AnniversaryButton" then
+		local tabDlg = DlgMgr:getDlgByName("AnniversaryTabDlg")
+
+		if tabDlg then
+			DlgMgr:closeDlg(tabDlg.lastDlg)
+			gf:ShowSmallTips(CHS[5410036])
+			ChatMgr:sendMiscMsg(CHS[5410036])
+		end
+	elseif ctrlName == "LanternButton" then
+		self:removeMagic("LanternButton", ResMgr.magic.xyhd_main_light)
+	end
+end
+
+function SystemFunctionDlg:addRedDoForZaixqyFirstLogin()
+	local data = GiftMgr:getWelfareData()
+
+	if not data then
+		return
+	end
+
+	if data.isShowHuiGui > 0 then
+		RedDotMgr:insertOneRedDot("WelfareDlg", "WelfareButton8")
+		RedDotMgr:insertOneRedDot("SystemFunctionDlg", "GiftsButton")
+	end
+
+	if data.isShowZhaohui > 0 and Me:queryBasicInt("level") >= 70 then
+		RedDotMgr:insertOneRedDot("WelfareDlg", "WelfareButton14")
+		RedDotMgr:insertOneRedDot("CallBackDlg", "GoCallBackButton")
+		RedDotMgr:insertOneRedDot("SystemFunctionDlg", "GiftsButton")
+	end
+end
+
+function SystemFunctionDlg:addMarginInButton(ctrlName)
+	local btn = self:getControl(ctrlName)
+
+	if not btn then
+		return
+	end
+
+	if ctrlName == "AnniversaryButton" then
+		local notFirstLoginInZNQ = cc.UserDefault:getInstance():getIntegerForKey("lastZNQLoginTime" .. gf:getShowId(Me:queryBasic("gid"))) or 0
+
+		if false and not gf:isSameDay5(notFirstLoginInZNQ, gf:getServerTime()) then
+			local effect = btn:getChildByTag(ResMgr.magic.first_login_during_znq)
+
+			if not effect then
+				local effect = gf:createLoopMagic(ResMgr.magic.first_login_during_znq, nil, {
+					blendMode = "add"
+				})
+
+				effect:setAnchorPoint(0.5, 0.5)
+				effect:setPosition(btn:getContentSize().width / 2, btn:getContentSize().height / 2)
+				effect:setContentSize(btn:getContentSize())
+				btn:addChild(effect, 1, ResMgr.magic.first_login_during_znq)
+			end
+
+			cc.UserDefault:getInstance():setIntegerForKey("lastZNQLoginTime" .. gf:getShowId(Me:queryBasic("gid")), gf:getServerTime())
+		end
+	elseif DistMgr:isInZYZServer() and ctrlName == "ZyzDailyButton" then
+		local key = "zyzDailyFlag" .. gf:getShowId(Me:queryBasic("gid"))
+		local time = cc.UserDefault:getInstance():getIntegerForKey(key, 0)
+
+		if not gf:isSameDay5(time, gf:getServerTime()) then
+			local effect = gf:createLoopMagic(ResMgr.magic.around_magic)
+
+			effect:setPosition(btn:getContentSize().width / 2, btn:getContentSize().height / 2)
+			btn:addChild(effect, 0, Const.ARMATURE_MAGIC_TAG)
+			cc.UserDefault:getInstance():setIntegerForKey(key, gf:getServerTime())
+		end
+	end
+end
+
+function SystemFunctionDlg:unVisibleAllCtrl()
+	for k, v in pairs(btnPosMap) do
+		local ctrl = self:getControl(k)
+
+		ctrl:setVisible(false)
+	end
+end
+
+function SystemFunctionDlg:clearAllAction()
+	local statusBtn1 = self:getControl("StatusButton1")
+
+	statusBtn1:stopAllActions()
+
+	local statusBtn2 = self:getControl("StatusButton2")
+
+	statusBtn2:stopAllActions()
+
+	for k, v in pairs(btnPosMap) do
+		local ctrl = self:getControl(k)
+
+		ctrl:stopAllActions()
+
+		if k == "LuckyFishButton" then
+			self:setJinLiTime()
+		end
+	end
+end
+
+function SystemFunctionDlg:sortIcon(list)
+	table.sort(list, function (l, r)
+		if btnPosMap[r] <= btnPosMap[l] then
+			return false
+		end
+
+		return true
+	end)
+end
+
+function SystemFunctionDlg:tryRefreshIcon()
+	if GameMgr.curMainUIState ~= MAIN_UI_STATE.STATE_SHOW then
+		return
+	end
+
+	self:refreshIcon()
+end
+
+function SystemFunctionDlg:refreshIcon(isGuide, ctrlName)
+	self.hasButtonChange = false
+	local status = self.curStatus
+
+	if isGuide and ctrlName and STATUS_BTN[ctrlName] then
+		status = ButtonState.status1
+	end
+
+	self:clearAllAction()
+	self:unVisibleAllCtrl()
+	self:sortIcon(BtnList)
+
+	local dlgContentSize = self.root:getContentSize()
+	local topX = 0
+	local topY = dlgContentSize.height
+	local leftTop = nil
+
+	for i = 1, #BtnList do
+		if btnPosMap[BtnList[i]] < 100 then
+			local ctrlName = BtnList[i]
+			local ctrl = self:getControl(ctrlName)
+			local contentSize = ctrl:getContentSize()
+
+			if i > 1 then
+				ctrl:setPosition(topX + contentSize.width / 2, topY - contentSize.height / 2 - EDG_MARGIN)
+			else
+				ctrl:setAnchorPoint(0.5, 0.5)
+				ctrl:setPosition(topX + contentSize.width / 2 - 2, topY - contentSize.height / 2)
+			end
+
+			topX = topX + contentSize.width + BUTTON_MARGIN_X
+
+			if ctrlName ~= "PromoteButton" then
+				ctrl:setVisible(true)
+			elseif ctrlName == "PromoteButton" then
+				self:setPromoteButtonVisible(PromoteMgr:promoteBtnDisplay())
+			end
+
+			if leftTop == nil then
+				leftTop = contentSize
+			end
+		end
+	end
+
+	if leftTop == nil then
+		leftTop = {
+			width = 0,
+			height = 0
+		}
+	end
+
+	self:setStatusButtonPos()
+
+	local y = topY - leftTop.height
+	local x = self:checkIsExsitIcon(STATUS_BTN) and BUTTON_SIZE + EDG_MARGIN or EDG_MARGIN
+
+	for i = 1, #BtnList do
+		if btnPosMap[BtnList[i]] > 100 and btnPosMap[BtnList[i]] < 200 then
+			local ctrl = self:getControl(BtnList[i])
+			local contentSize = ctrl:getContentSize()
+
+			ctrl:setPosition(x + contentSize.width / 2, y - contentSize.height / 2)
+
+			x = x + contentSize.width + BUTTON_MARGIN_X
+
+			ctrl:setVisible(status == ButtonState.status1)
+		end
+	end
+
+	local y = topY - leftTop.height - BUTTON_SIZE
+	local x = EDG_MARGIN
+
+	for i = 1, #BtnList do
+		if btnPosMap[BtnList[i]] > 200 then
+			local ctrl = self:getControl(BtnList[i])
+			local contentSize = ctrl:getContentSize()
+
+			ctrl:setPosition(x + contentSize.width / 2, y - contentSize.height / 2)
+
+			y = y - contentSize.height - BUTTON_MARGIN_Y
+
+			ctrl:setVisible(status == ButtonState.status1)
+		end
+	end
+
+	self.root:requestDoLayout()
+
+	self.leftTop = leftTop
+
+	if status == ButtonState.status1 then
+		self:onStatusButton1()
+	else
+		self:onStatusButton2()
+	end
+end
+
+function SystemFunctionDlg:showButton(buttons, time, callBackFunc)
+	if self.leftTop == nil then
+		return
+	end
+
+	local basicBtn = self:getControl("StatusButton1", Const.UIButton)
+	local dlgContentSize = self.root:getContentSize()
+	local y = dlgContentSize.height - self.leftTop.height
+	local x = BUTTON_SIZE + EDG_MARGIN
+
+	for i = 1, #buttons do
+		if btnPosMap[buttons[i]] > 100 and btnPosMap[buttons[i]] < 200 and self:isContainIcon(buttons[i]) then
+			local v = self:getControl(buttons[i])
+			local contentSize = v:getContentSize()
+			local move = cc.MoveTo:create(time, cc.p(x + contentSize.width / 2, y - contentSize.height / 2))
+			x = x + contentSize.width + BUTTON_MARGIN_X
+
+			v:setVisible(true)
+			v:stopAllActions()
+			v:runAction(move)
+		end
+	end
+
+	local y = y - BUTTON_SIZE
+	local x = EDG_MARGIN
+
+	for i = 1, #buttons do
+		if btnPosMap[buttons[i]] > 200 and self:isContainIcon(buttons[i]) then
+			local v = self:getControl(buttons[i])
+			local contentSize = v:getContentSize()
+			local move = cc.MoveTo:create(time, cc.p(x + contentSize.width / 2, y - contentSize.height / 2))
+			y = y - contentSize.height - BUTTON_MARGIN_Y
+
+			v:setVisible(true)
+			v:stopAllActions()
+			v:runAction(move)
+		end
+	end
+
+	if callBackFunc then
+		local delay = time - DIF_TIME_BETWEEN_ACTION_AND_HIDE
+
+		basicBtn:stopAllActions()
+		basicBtn:runAction(cc.Sequence:create(cc.DelayTime:create(delay), cc.CallFunc:create(callBackFunc)))
+	end
+
+	if self.isOpenTrade then
+		self:onTradeButton()
+	end
+end
+
+function SystemFunctionDlg:hideButton(buttons, time, callBackFunc)
+	local basicBtn = self:getControl("StatusButton1", Const.UIButton)
+	local x, y = basicBtn:getPosition()
+
+	for i = 1, #buttons do
+		if btnPosMap[buttons[i]] > 100 and btnPosMap[buttons[i]] < 200 then
+			local v = self:getControl(buttons[i])
+			local contentSize = v:getContentSize()
+			local move = cc.MoveTo:create(time, cc.p(x + contentSize.width / 3, y))
+
+			v:stopAllActions()
+			v:runAction(move)
+		end
+	end
+
+	for i = 1, #buttons do
+		if btnPosMap[buttons[i]] > 200 then
+			local v = self:getControl(buttons[i])
+			local contentSize = v:getContentSize()
+			local move = cc.MoveTo:create(time, cc.p(x, y - contentSize.height / 3))
+
+			v:stopAllActions()
+			v:runAction(move)
+		end
+	end
+
+	if callBackFunc then
+		local delay = time - DIF_TIME_BETWEEN_ACTION_AND_HIDE
+
+		basicBtn:stopAllActions()
+		basicBtn:runAction(cc.Sequence:create(cc.DelayTime:create(delay), cc.CallFunc:create(callBackFunc)))
+	end
+
+	if self.isOpenTrade then
+		self:onTradeButton()
+	end
+end
+
+function SystemFunctionDlg:getIconCtrl(iconName)
+	return self:getControl(iconName)
+end
+
+function SystemFunctionDlg:preAddIcon(iconName)
+	local iconCtrl = self:getControl(iconName)
+
+	if iconCtrl == nil then
+		return
+	end
+
+	local icons = {}
+	local type = 0
+
+	if btnPosMap[iconName] > 200 then
+		for k, v in pairs(btnPosMap) do
+			if v > 200 and btnPosMap[iconName] < v and self:isContainIcon(k) then
+				table.insert(icons, k)
+			end
+		end
+
+		type = TYPE_VERTICAL
+	elseif btnPosMap[iconName] > 100 then
+		for k, v in pairs(btnPosMap) do
+			if v > 100 and v < 200 and btnPosMap[iconName] < v and self:isContainIcon(k) then
+				table.insert(icons, k)
+			end
+		end
+
+		type = TYPE_HORIZONTAL
+	else
+		for k, v in pairs(btnPosMap) do
+			if v < 100 and btnPosMap[iconName] < v and self:isContainIcon(k) then
+				table.insert(icons, k)
+			end
+		end
+
+		type = TYPE_HORIZONTAL
+	end
+
+	local iconContentSize = iconCtrl:getContentSize()
+	local pos = {}
+	local anchorPoint = {}
+
+	if #icons ~= 0 then
+		self:sortIcon(icons)
+
+		local ctrl = self:getControl(icons[1])
+		pos.x, pos.y = ctrl:getPosition()
+		anchorPoint = ctrl:getAnchorPoint()
+	else
+		self:sortIcon(BtnList)
+
+		local lastIcon = 0
+		local lastIconCtrl = nil
+
+		for i = 1, #BtnList do
+			if btnPosMap[BtnList[i]] < btnPosMap[iconName] and lastIcon < btnPosMap[BtnList[i]] and math.floor(btnPosMap[iconName] / 100) == math.floor(btnPosMap[BtnList[i]] / 100) then
+				lastIconCtrl = self:getControl(BtnList[i])
+				lastIcon = btnPosMap[BtnList[i]]
+			end
+		end
+
+		if lastIconCtrl ~= nil then
+			anchorPoint = lastIconCtrl:getAnchorPoint()
+			pos.x, pos.y = lastIconCtrl:getPosition()
+			local contentSize = lastIconCtrl:getContentSize()
+
+			if TYPE_HORIZONTAL == type then
+				pos.x = pos.x + contentSize.width + BUTTON_MARGIN_X
+			elseif TYPE_VERTICAL == type then
+				pos.y = pos.y - contentSize.height - BUTTON_MARGIN_Y
+			end
+		elseif TYPE_HORIZONTAL == type then
+			if btnPosMap[iconName] > 100 then
+				local basicBtn = self:getControl("StatusButton1", Const.UIButton)
+				pos.x, pos.y = basicBtn:getPosition()
+				pos.x = pos.x + BUTTON_SIZE + BUTTON_MARGIN_X
+				anchorPoint = {
+					x = 0.5,
+					y = 0.5
+				}
+			else
+				pos.x = 0
+				pos.y = Const.WINSIZE.height
+				anchorPoint = {
+					x = 1,
+					y = 0
+				}
+			end
+		elseif TYPE_VERTICAL == type then
+			local basicBtn = self:getControl("StatusButton1", Const.UIButton)
+			pos.x, pos.y = basicBtn:getPosition()
+			pos.y = pos.y - BUTTON_SIZE - BUTTON_MARGIN_Y
+			anchorPoint = {
+				x = 0.5,
+				y = 0.5
+			}
+		end
+	end
+
+	for i = 1, #icons do
+		local ctrl = self:getControl(icons[i])
+		local x, y = ctrl:getPosition()
+		local action = nil
+
+		if btnPosMap[icons[i]] > 200 then
+			action = cc.MoveTo:create(0.2, cc.p(x, y - iconContentSize.height))
+		else
+			action = cc.MoveTo:create(0.2, cc.p(x + iconContentSize.width, y))
+		end
+
+		local seq = cc.Sequence:create(cc.DelayTime:create(2.6), action)
+
+		ctrl:runAction(seq)
+	end
+
+	iconCtrl:setPosition(pos.x, pos.y)
+
+	pos = iconCtrl:convertToWorldSpace(cc.p(iconContentSize.width * (1 - anchorPoint.x), iconContentSize.height * (1 - anchorPoint.y)))
+	pos.x = pos.x / Const.UI_SCALE
+	pos.y = pos.y / Const.UI_SCALE
+
+	return pos
+end
+
+function SystemFunctionDlg:MSG_ENTER_GAME(map)
+	self:updateServerInfo()
+end
+
+function SystemFunctionDlg:updateServerInfo()
+	local serverName = GameMgr:getServerName()
+	local distName, serverId = DistMgr:getServerShowName(serverName)
+
+	if distName == nil then
+		distName = serverName
+	end
+
+	if serverId == nil then
+		serverId = "N"
+	end
+
+	self:setCtrlVisible("LineImage", true)
+
+	local timeInfo = TaskMgr:getMasqueradeTimeInfo()
+
+	if MapMgr:isInMasquerade() and timeInfo then
+		self:setLabelText("ServerLabel", string.format(CHS[6000590], serverId, timeInfo.whcd_id))
+		self:setCtrlVisible("LineImage", false)
+	elseif MapMgr:isInWyk() then
+		local wykInfo = TaskMgr:getWykInfo()
+
+		if wykInfo then
+			self:setLabelText("ServerLabel", string.format(CHS[6000590], serverId, wykInfo.dungeon_index))
+			self:setCtrlVisible("LineImage", false)
+		else
+			self:setLabelText("ServerLabel", string.format(CHS[6000591], serverId))
+			self:setCtrlVisible("LineImage", false)
+		end
+	elseif MapMgr:isInBeastsKing() then
+		local bskTimeInfo = TaskMgr:getBeastsKingTimeInfo()
+
+		if bskTimeInfo then
+			self:setLabelText("ServerLabel", string.format(CHS[6000590], serverId, bskTimeInfo.dungeonIndex))
+			self:setCtrlVisible("LineImage", false)
+		else
+			self:setLabelText("ServerLabel", string.format(CHS[6000591], serverId))
+			self:setCtrlVisible("LineImage", false)
+		end
+	elseif serverId == "" then
+		self:setLabelText("ServerLabel", serverName)
+		self:setCtrlVisible("LineImage", false)
+	elseif MapMgr:isInKuafjjzc() then
+		self:setLabelText("ServerLabel", CHS[5400419])
+		self:setCtrlVisible("LineImage", false)
+	elseif MapMgr:isInYanwc() then
+		self:setLabelText("ServerLabel", CHS[2100335])
+		self:setCtrlVisible("LineImage", false)
+	elseif DistMgr:isInKFBZServer() then
+		self:setLabelText("ServerLabel", CHS[7150576])
+		self:setCtrlVisible("LineImage", false)
+	elseif DistMgr:isInMRZBServer() then
+		self:setLabelText("ServerLabel", CHS[4201264])
+		self:setCtrlVisible("LineImage", false)
+	else
+		self:setLabelText("ServerLabel", serverId .. CHS[3003696])
+		self:setCtrlVisible("LineImage", true)
+	end
+
+	self:updateLayout("DistPanel")
+end
+
+function SystemFunctionDlg:updateTradePanel()
+	local missCount = 0
+	local displayCount = 1
+
+	if not self:getCtrlVisible("TreasureButton") then
+		missCount = missCount + 1
+	else
+		self:getControl("TreasureButton"):setPositionX(self.tradeFristPosX + JUBAO_DIS * displayCount)
+
+		displayCount = displayCount + 1
+	end
+
+	if not self:getCtrlVisible("AuctionButton") then
+		missCount = missCount + 1
+	else
+		self:getControl("AuctionButton"):setPositionX(self.tradeFristPosX + JUBAO_DIS * displayCount)
+
+		displayCount = displayCount + 1
+	end
+
+	if not self:getCtrlVisible("JubaoButton") then
+		missCount = missCount + 1
+	else
+		self:getControl("JubaoButton"):setPositionX(self.tradeFristPosX + JUBAO_DIS * displayCount)
+
+		displayCount = displayCount + 1
+	end
+
+	if not self:getCtrlVisible("TradingSpotButton") then
+		missCount = missCount + 1
+	else
+		self:getControl("TradingSpotButton"):setPositionX(self.tradeFristPosX + JUBAO_DIS * displayCount)
+
+		displayCount = displayCount + 1
+	end
+
+	local panel = self:getControl("TradePanel")
+	local image = self:getControl("BackImage", nil, panel)
+
+	panel:setContentSize(self.tradeSize.width - JUBAO_DIS * missCount, self.tradeSize.height)
+	image:setContentSize(self.tradeSize.width - JUBAO_DIS * missCount, self.tradeSize.height)
+	image:setPositionX(image:getContentSize().width * 0.5)
+end
+
+function SystemFunctionDlg:MSG_SPOT_ENABLE(data)
+	self:setCtrlVisible("TradingSpotButton", data.isOpen)
+	self:updateTradePanel()
+end
+
+function SystemFunctionDlg:MSG_TRADING_ENABLE(data)
+	self:setCtrlVisible("JubaoButton", TradingMgr:getTradingEnable() and not DeviceMgr:isReviewVer())
+	self:updateTradePanel()
+end
+
+function SystemFunctionDlg:MSG_REFRESH_SHUAD_TRUSTEESHIP(data)
+	local data = GetTaoMgr:getTrusteeshipData()
+
+	if data.state == TRUSTEESHIP_STATE.OFF then
+		self:setCtrlVisible("TrusteeshipPanel", false)
+	else
+		self:setCtrlVisible("TrusteeshipPanel", true)
+
+		if data.state == TRUSTEESHIP_STATE.PAUSE then
+			self:setLabelText("TrusteeshipLabel", CHS[4100398])
+			self:setLabelText("TrusteeshipLabel2", CHS[4100398])
+		else
+			self:setLabelText("TrusteeshipLabel", CHS[4100399])
+			self:setLabelText("TrusteeshipLabel2", CHS[4100399])
+		end
+	end
+end
+
+function SystemFunctionDlg:doActionWhenEndCombat()
+	if self.newActionCache then
+		self:playAddNewIcon(self.newActionCache)
+
+		self.newActionCache = nil
+
+		EventDispatcher:removeEventListener(EVENT.EVENT_END_COMBAT, self.doActionWhenEndCombat, self)
+
+		return
+	end
+end
+
+function SystemFunctionDlg:playAddNewIcon(data)
+	if data.type == "play" and (Me:isInCombat() or Me:isLookOn()) then
+		self.newActionCache = data
+
+		EventDispatcher:addEventListener(EVENT.EVENT_END_COMBAT, self.doActionWhenEndCombat, self)
+
+		return
+	end
+
+	local button = self:getControl(data.ctrlName)
+
+	if button then
+		GuideMgr:refreshMainIcon(true, data.ctrlName)
+
+		if data.type == "play" then
+			local tempBtn = button:clone()
+			local pos = self:preAddIcon(data.ctrlName)
+
+			button:setVisible(false)
+			tempBtn:setVisible(true)
+
+			local action = cc.Sequence:create({
+				cc.DelayTime:create(0.1),
+				cc.MoveTo:create(0.6, pos),
+				cc.DelayTime:create(0.1),
+				cc.CallFunc:create(function ()
+					tempBtn:removeFromParent()
+					button:setVisible(true)
+					self:addListIcon(data.ctrlName)
+					self:refreshIcon()
+				end)
+			})
+			local size = self:getWinSize()
+
+			tempBtn:runAction(action)
+			tempBtn:setPosition(size.width / 2, size.height / 2)
+			self.root:addChild(tempBtn, 10, TEMP_BUTTON_TAG)
+
+			return
+		end
+
+		self:addListIcon(data.ctrlName)
+		self:refreshIcon()
+	end
+end
+
+function SystemFunctionDlg:onCheckAddRedDot(ctrlName)
+	if not ctrlName or not BTN_DLG_MAP[ctrlName] then
+		return true
+	end
+
+	local dlgName = BTN_DLG_MAP[ctrlName]
+
+	return not DlgMgr:isDlgOpened(dlgName)
+end
+
+function SystemFunctionDlg:MSG_LD_LIFEDEATH_ID(data)
+	local ctrlName = "ShengSiButton"
+
+	if data.id ~= "" then
+		local button = self:getControl(ctrlName)
+
+		self:setCtrlVisible("SSLeftTimePanel", false, button)
+
+		if data.type == 1 then
+			self:playAddNewIcon({
+				type = "play",
+				ctrlName = ctrlName
+			})
+			gf:createArmatureMagic(ResMgr.ArmatureMagic.main_ui_btn, self:getControl(ctrlName), Const.ARMATURE_MAGIC_TAG)
+		else
+			self:playAddNewIcon({
+				ctrlName = ctrlName
+			})
+		end
+
+		local button = self:getControl(ctrlName)
+		button.shengSiId = data.id
+		local curTime = gf:getServerTime()
+
+		if curTime < data.time then
+			self:setCtrlVisible("SSLeftTimePanel", true, button)
+
+			local timeCountLabel = self:getControl("SSLeftTimeLabel", nil, button)
+			local timeCountLabel2 = self:getControl("SSLeftTimeLabel2", nil, button)
+
+			timeCountLabel:stopAllActions()
+
+			local function func()
+				local curTime = gf:getServerTime()
+				local time = data.time - curTime
+
+				if time <= 0 then
+					self:setCtrlVisible("SSLeftTimePanel", false, button)
+					timeCountLabel:stopAllActions()
+
+					return
+				end
+
+				local m = math.floor(time / 60 % 60)
+				local h = math.floor(time / 3600)
+				local str = string.format("%02d:%02d", h, m)
+
+				if h < 1 then
+					local s = math.floor(time % 60)
+					str = string.format("%02d:%02d", m, s)
+				end
+
+				timeCountLabel:setString(str)
+				timeCountLabel2:setString(str)
+			end
+
+			schedule(timeCountLabel, func, 1)
+			func()
+		else
+			self:setCtrlVisible("SSLeftTimePanel", false, button)
+		end
+
+		return
+	end
+
+	local tempButton = self.root:getChildByTag(TEMP_BUTTON_TAG)
+
+	if tempButton and tempButton:getName() == ctrlName then
+		tempButton:removeFromParent()
+	end
+
+	if self:removeListIcon(ctrlName) then
+		GuideMgr:refreshMainIcon(true, ctrlName)
+		self:refreshIcon()
+	end
+end
+
+function SystemFunctionDlg:MSG_FAMOUS_OPEN_UI(data)
+	self.famousData = data
+end
+
+function SystemFunctionDlg:MSG_LD_MATCH_DATA(data)
+	local dlg = DlgMgr:openDlg("ShengSiSetDlg")
+
+	dlg:MSG_LD_MATCH_DATA(data)
+end
+
+function SystemFunctionDlg:MSG_FIREWORKS_PARTY_INFO()
+	ActivityHelperMgr.needAddFireWorksButton = nil
+
+	if self.delayUpdataFireBtn then
+		self.root:stopAction(self.delayUpdataFireBtn)
+	end
+
+	local data = ActivityHelperMgr.fireworksData
+
+	if data then
+		local endTime = data.end_time + 10
+		local curTime = gf:getServerTime()
+
+		if endTime <= curTime then
+			if GuideMgr:removeMainIcon(45, true) then
+				DlgMgr:sendMsg("SystemFunctionDlg", "tryRefreshIcon")
+			end
+
+			return
+		end
+
+		if data.start_time <= curTime then
+			ActivityHelperMgr.needAddFireWorksButton = true
+
+			if Me:getLevel() >= 10 and GuideMgr:addMainIcon(45, true) then
+				DlgMgr:sendMsg("SystemFunctionDlg", "tryRefreshIcon")
+			end
+
+			self.delayUpdataFireBtn = performWithDelay(self.root, function ()
+				ActivityHelperMgr.needAddFireWorksButton = nil
+
+				if GuideMgr:removeMainIcon(45, true) then
+					DlgMgr:sendMsg("SystemFunctionDlg", "tryRefreshIcon")
+				end
+			end, endTime - curTime)
+		else
+			self.delayUpdataFireBtn = performWithDelay(self.root, function ()
+				self:MSG_FIREWORKS_PARTY_INFO()
+			end, data.start_time - curTime + 1)
+		end
+	end
+end
+
+function SystemFunctionDlg:MSG_LEVEL_UP(data)
+	if data.level >= 10 and ActivityHelperMgr.needAddFireWorksButton and GuideMgr:addMainIcon(45, true) then
+		DlgMgr:sendMsg("SystemFunctionDlg", "tryRefreshIcon")
+	end
+end
+
+function SystemFunctionDlg:MSG_CS_SERVER_TYPE()
+	if not RedDotMgr:isCanAddRedDot("SystemFunctionDlg", "MallButton") then
+		RedDotMgr:removeOneRedDot("SystemFunctionDlg", "MallButton")
+	end
+
+	if not RedDotMgr:isCanAddRedDot("SystemFunctionDlg", "GiftsButton") then
+		RedDotMgr:removeOneRedDot("SystemFunctionDlg", "GiftsButton")
+	end
+	
+
+end
+
+function SystemFunctionDlg:setJinLiTime(data)
+	data = data or ActivityHelperMgr.jinliNotifyInfo
+
+	if not data then
+		return
+	end
+
+	local h = tonumber(gf:getServerDate("%H", data.draw_lottery_time))
+	local m = tonumber(gf:getServerDate("%M", data.draw_lottery_time))
+
+	self:setLabelText("TimeLabel", string.format(CHS[4300984], h, m), "LuckyFishButton")
+	self:setLabelText("TimeLabel2", string.format(CHS[4300984], h, m), "LuckyFishButton")
+	self:setCtrlVisible("TimePanel", gf:isSameDay5(data.draw_lottery_time, gf:getServerTime()))
+
+	local btn = self:getControl("LuckyFishButton")
+
+	if btn.jinliTimer then
+		btn:stopAction(btn.jinliTimer)
+
+		btn.jinliTimer = nil
+	end
+
+	if data.draw_lottery_time < gf:getServerTime() then
+		self:setCtrlVisible("TimePanel", false, btn)
+
+		return
+	end
+
+	btn.jinliTimer = schedule(btn, function ()
+		if data.draw_lottery_time < gf:getServerTime() then
+			if btn.jinliTimer then
+				btn:stopAction(btn.jinliTimer)
+
+				btn.jinliTimer = nil
+			end
+
+			self:setCtrlVisible("TimePanel", false, btn)
+
+			if GuideMgr:isIconExist(50) then
+				GuideMgr:removeMainIcon(50, true)
+				GuideMgr:refreshMainIcon()
+			end
+		else
+			self:setCtrlVisible("TimePanel", gf:isSameDay5(data.draw_lottery_time, gf:getServerTime()), btn)
+		end
+	end, 1)
+end
+
+function SystemFunctionDlg:onLuckyFishButton(sender)
+	gf:CmdToServer("CMD_JINLI_OPEN_DLG")
+end
+
+return SystemFunctionDlg

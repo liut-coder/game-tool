@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>游戏工具管理端</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="mark">GT</div>
+          <div>
+            <h1>游戏工具管理端</h1>
+            <p>改包与 Docker 部署</p>
+          </div>
+        </div>
+        <nav>
+          <button class="nav active" data-section="overview">总览</button>
+          <button class="nav" data-section="deploy">部署</button>
+          <button class="nav" data-section="apk">APK</button>
+          <button class="nav" data-section="logs">日志</button>
+        </nav>
+      </aside>
+
+      <main>
+        <header class="topbar">
+          <div>
+            <p class="kicker">当前项目</p>
+            <h2>手工端 / 天道 App</h2>
+          </div>
+          <div class="toolbar">
+            <button id="refreshBtn">刷新</button>
+          </div>
+        </header>
+
+        <section id="overview" class="section active">
+          <div class="grid two">
+            <div class="panel">
+              <div class="panel-head">
+                <h3>素材状态</h3>
+              </div>
+              <div id="assetList" class="asset-list"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head">
+                <h3>服务状态</h3>
+              </div>
+              <pre id="composeStatus" class="console small"></pre>
+            </div>
+          </div>
+        </section>
+
+        <section id="deploy" class="section">
+          <div class="panel">
+            <div class="panel-head">
+              <h3>部署参数</h3>
+              <button id="saveConfigBtn">保存参数</button>
+            </div>
+            <form id="configForm" class="form-grid">
+              <label>
+                <span>公网 IP</span>
+                <input name="PUBLIC_IP" placeholder="留空自动探测" />
+              </label>
+              <label>
+                <span>服务端目录</span>
+                <input name="SOURCE_ROOT" />
+              </label>
+              <label>
+                <span>MySQL root 密码</span>
+                <input name="MYSQL_ROOT_PASSWORD" />
+              </label>
+              <label>
+                <span>MySQL 本机端口</span>
+                <input name="MYSQL_PORT" inputmode="numeric" />
+              </label>
+              <label>
+                <span>Compose 命令</span>
+                <input name="COMPOSE" />
+              </label>
+              <div class="switches">
+                <label><input type="checkbox" name="IMPORT_DB" /> 导入数据库</label>
+                <label><input type="checkbox" name="FORCE_IMPORT_DB" /> 强制重导</label>
+                <label><input type="checkbox" name="REMOVE_BACKDOORS" /> 清理后门</label>
+                <label><input type="checkbox" name="START_GAME" /> 启动游戏进程</label>
+                <label><input type="checkbox" name="START_ZONE2" /> 启动二区</label>
+              </div>
+            </form>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <h3>动作</h3>
+            </div>
+            <div class="actions">
+              <button data-action="prepare">准备服务端文件</button>
+              <button data-action="rewrite">重写 IP/配置</button>
+              <button class="primary" data-action="deploy">一键部署</button>
+              <button data-action="up">启动 Web/Game 容器</button>
+              <button data-action="start_game">启动游戏进程</button>
+              <button class="danger" data-action="down">停止服务</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="apk" class="section">
+          <div class="grid two">
+            <div class="panel">
+              <div class="panel-head">
+                <h3>APK 工具</h3>
+              </div>
+              <div id="apkTools" class="asset-list"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head">
+                <h3>APK 操作</h3>
+              </div>
+              <div class="actions">
+                <button class="primary" data-action="apk_scan">扫描配置</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="logs" class="section">
+          <div class="panel">
+            <div class="panel-head">
+              <h3>任务日志</h3>
+              <select id="taskSelect"></select>
+            </div>
+            <pre id="taskLog" class="console"></pre>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script src="/app.js"></script>
+  </body>
+</html>

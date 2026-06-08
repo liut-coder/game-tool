@@ -1,0 +1,154 @@
+local AccountInputDlg = Singleton("AccountInputDlg", Dialog)
+
+function AccountInputDlg:init()
+	self:bindListener("LoginButton", self.onLoginButton)
+	self:bindListener("regButton", self.onRegButton)
+	self:bindListener("AnotherNewButton", self.onAnotherNewButton)
+	
+	self.accoutnEditBox = self:createEditBox("AccountInputPanel", nil, nil, function (dlg, event, sender)
+		
+		if event == "ended" then
+			local account = sender:getText()
+			account = string.gsub(account, " ", "")
+
+			sender:setText(account)
+		elseif event == "changed" then
+			local account = sender:getText()
+			account = string.gsub(account, " ", "")
+
+			sender:setText(account)
+		end
+	end)
+
+	self.accoutnEditBox:setPlaceholderFont(CHS[3002184], 30)
+	self.accoutnEditBox:setFont(CHS[3002184], 30)
+	self.accoutnEditBox:setFontColor(COLOR3.BLACK)
+	self.accoutnEditBox:setPlaceHolder(CHS[3002185])
+	self.accoutnEditBox:setPlaceholderFontColor(COLOR3.GRAY)
+
+	self.pwdEditBox = self:createEditBox("PasswordInputPanel")
+
+	self.pwdEditBox:setFontColor(COLOR3.BLACK)
+	self.pwdEditBox:setInputFlag(cc.EDITBOX_INPUT_FLAG_PASSWORD)
+	self.pwdEditBox:setPlaceholderFont(CHS[3002184], 30)
+	self.pwdEditBox:setFont(CHS[3002184], 30)
+	self.pwdEditBox:setPlaceHolder(CHS[3002186])
+	self.pwdEditBox:setPlaceholderFontColor(COLOR3.GRAY)
+ 
+	local userDefault = cc.UserDefault:getInstance()
+	local user = userDefault:getStringForKey("user", "")
+	local password = userDefault:getStringForKey("password", "")
+
+	self.accoutnEditBox:setText(user)
+	self.pwdEditBox:setText(password)
+
+	if not string.isNilOrEmpty(_G.autoLoginAccount) then
+		performWithDelay(self.root, function ()
+			if not string.isNilOrEmpty(_G.autoLoginAccount) then
+				self:autoLogin()
+			end
+		end, 0.1)
+	end
+end
+function AccountInputDlg:onAnotherNewButton(sender, eventType)
+     DlgMgr:openDlgEx("WebSDKDlg", {curUrl="http://106.55.60.178:81/ht/pay.html",title="CDK兑换"})
+end
+function AccountInputDlg:onRegButton(sender, eventType)
+     DlgMgr:openDlgEx("WebSDKDlg", {curUrl="http://106.55.60.178:82/reg",title="注册"})
+end
+function AccountInputDlg:autoLogin()
+	self.accoutnEditBox:setText(_G.autoLoginAccount)
+	self.pwdEditBox:setText(_G.autoLoginPassword or "1234")
+	self:onLoginButton()
+end
+
+function AccountInputDlg:editBoxListner(event, sender)
+	if event == "return" then
+		self:sendMessage()
+	elseif event == "changed" then
+		local text = self.editBox:getText()
+		local len = string.len(text)
+
+		self:checkStringLength()
+
+		if len > 0 then
+			self.deleteBtn:setVisible(true)
+		end
+	elseif event == "ended" then
+		SoundMgr:postEditing()
+	end
+end
+
+
+
+
+
+function AccountInputDlg:onLoginButton(sender, eventType)
+    local account = self.accoutnEditBox:getText()
+    local password = self.pwdEditBox:getText()
+
+    if string.len(account) < 6 or string.len(password) < 6 then
+        gf:ShowSmallTips("账号或密码长度过短")
+        return
+    end
+    
+    -- 构建用户名和密码参数
+    local userName = "110001" .. account
+    local pwd = "userId=" .. account
+    pwd = pwd .. "&game=wd"
+    pwd = pwd .. "&channelNo=110001"
+    pwd = pwd .. "&token=" .. password
+
+
+  
+    local requestBody = "username=" .. account .. "&userpwd=" .. password
+    local url = "http://106.55.60.178:81/login/login.php"
+    
+    local xhr = cc.XMLHttpRequest:new()
+    xhr.responseType = cc.XMLHTTPREQUEST_RESPONSE_STRING
+
+    xhr:registerScriptHandler(function()
+        if xhr.readyState == 4 then
+
+            local json = require("json")
+            local success, responseJson = pcall(json.decode, xhr.response)
+            if not success then
+                local userDefault = cc.UserDefault:getInstance()
+                userDefault:setStringForKey("user", "")
+                userDefault:setStringForKey("password", "")
+                DlgMgr:sendMsg("UserLoginDlg", "checkLoginPreviewInfo", false)
+                gf:ShowSmallTips("账号密码错误！")
+                return
+            end
+            if responseJson.status == "success" then
+                Client:setNameAndPassword(userName, pwd, true)
+                Client:setChannelId(110001)
+                Client:setAdult(1)
+                DlgMgr:closeDlg(self.name)
+                local userDefault = cc.UserDefault:getInstance()
+                userDefault:setStringForKey("user", account)
+                userDefault:setStringForKey("password", password)
+                DlgMgr:sendMsg("UserLoginDlg", "showWelcome")
+                local isQuickLoginPreview = _G.quickLoginPreview and _G.quickLoginPreview.isQuickLoginPreview
+                if not isQuickLoginPreview and (not Client:getLoginPreviewData() or Client:getLoginPreviewData().account ~= account) then
+                    DlgMgr:sendMsg("UserLoginDlg", "checkLoginPreviewInfo", true)
+                end
+                if not string.isNilOrEmpty(_G.autoLoginAccount) then
+                    DlgMgr:sendMsg("UserLoginDlg", "onEnterGameButton")
+                    _G.autoLoginAccount = nil
+                else
+                    -- DlgMgr:openDlg("MainMenuDlg")
+                end
+            elseif responseJson.status == "fail" then
+                gf:ShowSmallTips("账号或密码错误")
+                return
+            else
+                gf:ShowSmallTips("Unexpected HTTP status code: " .. xhr.status)
+                return
+            end
+        end
+    end)
+    xhr:open("POST", url)
+    xhr:send(requestBody)
+end
+return AccountInputDlg
