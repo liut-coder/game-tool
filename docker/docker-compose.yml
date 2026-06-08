@@ -1,0 +1,49 @@
+services:
+  mysql:
+    image: mysql:5.6
+    platform: linux/amd64
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8
+      - --collation-server=utf8_general_ci
+      - --max_connections=${MYSQL_MAX_CONNECTIONS:-1000}
+      - --sql_mode=NO_ENGINE_SUBSTITUTION
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-long1251374638}
+      MYSQL_ROOT_HOST: "%"
+    ports:
+      - "127.0.0.1:${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./data/rootfs/home/db:/seed/db:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -uroot -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  web:
+    build: ./web
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./data/rootfs/www:/www:rw
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  game:
+    build: ./game
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      START_GAME: ${START_GAME:-0}
+      START_ZONE2: ${START_ZONE2:-0}
+    volumes:
+      - ./data/rootfs/home:/home:rw
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  mysql-data:

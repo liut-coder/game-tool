@@ -17,3 +17,8 @@ apk-work/
 .DS_Store
 .idea/
 .vscode/
+
+# Docker deployment local state
+docker/.env
+docker/data/
+docker/**/__pycache__/
